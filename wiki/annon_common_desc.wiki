@@ -1,0 +1,16 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+@Table name ：只能用于类
+@Cache 否启用cache：可以用于类，属性
+@Inmemory  常驻内存：可以用于类，属性
+@Index 用于boolm filter ,查询；
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
