@@ -1,14 +1,11 @@
 package com.supermy.domain;
 
 import com.supermy.annotation.Column;
-import com.supermy.annotation.ID;
 import com.supermy.annotation.Table;
 
 @Table(name = "user_test")
-public class User {
+public class User extends Base {
 
-	@ID("auto")
-	public String id;
 	@Column(name = "name", bloomfilter = true)
 	private String name;
 	@Column(name = "sex")
@@ -17,6 +14,17 @@ public class User {
 	private String age;
 	@Column(name = "contact")
 	private String contact;
+
+	public String toString() {
+		if (name==null) {
+			return "";
+		}
+		StringBuffer sb = new StringBuffer(name);
+		sb.append(";").append(sex).append(";").append(age).append(";").append(
+				contact+" createtime:"+getCreateTime());
+		return sb.toString();
+
+	}
 
 	public User(String name) {
 		this.name = name;
@@ -82,20 +90,20 @@ public class User {
 		this.contact = contact;
 	}
 
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
-
-	/**
-	 * @param id
-	 *            the id to set
-	 */
-	public void setId(String id) {
-		this.id = id;
-	}
+	// /**
+	// * @return the id
+	// */
+	// public String getId() {
+	// return id;
+	// }
+	//
+	// /**
+	// * @param id
+	// * the id to set
+	// */
+	// public void setId(String id) {
+	// this.id = id;
+	// }
 
 	/**
 	 * @param args

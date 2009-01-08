@@ -13,10 +13,10 @@ import java.lang.annotation.Target;
  * @author my
  * 
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Many2One {
-	String name();
-	Class parent();
+//	String name();
+//	Class parent();
 }
