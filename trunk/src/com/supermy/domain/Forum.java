@@ -1,37 +1,24 @@
 package com.supermy.domain;
 
 import com.supermy.annotation.Column;
-import com.supermy.annotation.ID;
+import com.supermy.annotation.Many2One;
 import com.supermy.annotation.Table;
 
 @Table(name = "forum_test")
-public class Forum {
+public class Forum extends Base {
 
-	@ID("auto")
-	public String id;
+	// @ID("auto")
+	// public String id;
+
 	@Column(name = "title", bloomfilter = true)
 	private String title;
 	@Column(name = "content")
 	private String content;
-	@Column(name = "publish_user")
-	private String publishUser;
+	@Column(name = "publish_user", bloomfilter = true)
+	@Many2One
+	private User publishUser;
 	@Column(name = "publish_time")
 	private String publishTime;
-
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
-
-	/**
-	 * @param id
-	 *            the id to set
-	 */
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	/**
 	 * @return the title
@@ -66,7 +53,7 @@ public class Forum {
 	/**
 	 * @return the publishUser
 	 */
-	public String getPublishUser() {
+	public User getPublishUser() {
 		return publishUser;
 	}
 
@@ -74,7 +61,7 @@ public class Forum {
 	 * @param publishUser
 	 *            the publishUser to set
 	 */
-	public void setPublishUser(String publishUser) {
+	public void setPublishUser(User publishUser) {
 		this.publishUser = publishUser;
 	}
 
@@ -92,6 +79,7 @@ public class Forum {
 	public void setPublishTime(String publishTime) {
 		this.publishTime = publishTime;
 	}
+	
 
 	/**
 	 * @param args
