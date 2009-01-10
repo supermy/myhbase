@@ -1,5 +1,7 @@
 package com.supermy.domain;
 
+import java.util.Map;
+
 import com.supermy.annotation.Column;
 import com.supermy.annotation.Table;
 
@@ -11,17 +13,17 @@ public class User extends Base {
 	@Column(name = "sex")
 	private String sex;
 	@Column(name = "age")
-	private String age;
+	private int age;
 	@Column(name = "contact")
-	private String contact;
+	private Map<String, String> contact;
 
 	public String toString() {
-		if (name==null) {
+		if (name == null) {
 			return "";
 		}
 		StringBuffer sb = new StringBuffer(name);
 		sb.append(";").append(sex).append(";").append(age).append(";").append(
-				contact+" createtime:"+getCreateTime());
+				contact + " createtime:" + getCreateTime());
 		return sb.toString();
 
 	}
@@ -63,7 +65,7 @@ public class User extends Base {
 	/**
 	 * @return the age
 	 */
-	public String getAge() {
+	public int getAge() {
 		return age;
 	}
 
@@ -71,14 +73,14 @@ public class User extends Base {
 	 * @param age
 	 *            the age to set
 	 */
-	public void setAge(String age) {
+	public void setAge(int age) {
 		this.age = age;
 	}
 
 	/**
 	 * @return the contact
 	 */
-	public String getContact() {
+	public Map<String, String> getContact() {
 		return contact;
 	}
 
@@ -86,31 +88,8 @@ public class User extends Base {
 	 * @param contact
 	 *            the contact to set
 	 */
-	public void setContact(String contact) {
+	public void setContact(Map<String, String> contact) {
 		this.contact = contact;
-	}
-
-	// /**
-	// * @return the id
-	// */
-	// public String getId() {
-	// return id;
-	// }
-	//
-	// /**
-	// * @param id
-	// * the id to set
-	// */
-	// public void setId(String id) {
-	// this.id = id;
-	// }
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
 	}
 
 }

@@ -4,6 +4,7 @@
 package com.supermy.domain.test;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -31,8 +32,13 @@ public class ActionTest {
 		// create
 		User newu = new User("tiger");
 		newu.setId("xyz");
-		newu.setAge("43");
-		newu.setContact("email:;qq:;msn:;");
+		newu.setAge(33);
+		Map<String, String> contact = new HashMap<String, String>();
+		contact.put("contact", "中关村");
+		contact.put("email", "yy@yy.com");
+		contact.put("qq", "123456");
+		contact.put("msn", "msn@msn.com");
+		newu.setContact(contact);
 		newu.setSex("男");
 		newu.saveOrUpdate();
 		// get
@@ -41,6 +47,9 @@ public class ActionTest {
 		uu.get();
 		Assert.assertEquals(uu.getName(), "tiger");
 		log.debug(uu);
+
+		// Assert.assertTrue(false);
+
 		// update
 		uu.setName("pig");
 		uu.saveOrUpdate();

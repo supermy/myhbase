@@ -1,15 +1,21 @@
 package com.supermy.domain;
 
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,9 +26,11 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.BatchUpdate;
 import org.apache.hadoop.hbase.io.Cell;
 import org.apache.hadoop.hbase.io.RowResult;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import tv.movo.exception.MokiException;
 
+import com.supermy.annotation.Column;
 import com.supermy.annotation.ID;
 import com.supermy.annotation.Table;
 import com.supermy.annotation.ID.IdType;
@@ -62,22 +70,62 @@ public class Action {
 		try {
 			HTableDescriptor htd = MyHbaseUtil.getTableDesc(t.name());
 			Collection<HColumnDescriptor> familiesDb = htd.getFamilies();
-//			Map<String, Field> fieldsObj = MyHbaseUtil.getFileds(clazz);
+			Map<String, Field> fieldsObj = MyHbaseUtil.getFileds(clazz);
 
-			String idValue = getId(t, clazz);
+			String idValue = getId(t, fieldsObj);
 			line = new BatchUpdate(idValue);
 			// 设置rowvalue
 			for (HColumnDescriptor columnDescriptor : familiesDb) {
-				log.debug(columnDescriptor.getNameAsString());
+				String columnName = columnDescriptor.getNameAsString();
+				log.debug(columnName);
 
-				//Field field = fieldsObj.get(columnDescriptor.getNameAsString());
-				Field field = MyHbaseUtil.getField(clazz,columnDescriptor.getNameAsString());
-				String value = BeanUtils.getProperty(this, field.getName());
-				if (StringUtils.isEmpty(value)) {
-					continue;
+				Field field = fieldsObj.get(columnName);
+				// TODO 其他类型支持
+				if (field.getType().isAssignableFrom(Map.class)) {
+					Map<String, String> f = new HashMap<String, String>();
+					f = (Map<String, String>) PropertyUtils.getProperty(this,
+							field.getName());
+					log.debug("map:" + f);
+					if (f == null || f.size() <= 0) {
+						continue;
+					}
+					for (Entry<String, String> entry : f.entrySet()) {
+						StringBuffer key = new StringBuffer(columnName).append(
+								":").append(entry.getKey());
+
+						line.put(key.toString(), entry.getValue().getBytes(
+								HConstants.UTF8_ENCODING));
+					}
+
 				}
-				line.put(columnDescriptor.getNameAsString() + ":", value
-						.getBytes(HConstants.UTF8_ENCODING));
+
+				if (field.getType().isAssignableFrom(Date.class)) {
+					Date f = (Date) PropertyUtils.getProperty(this, field
+							.getName());
+					log.debug("date:" + f);
+					line.put(columnName + ":", Bytes.toBytes(f.getTime()));
+				}
+				if (field.getType().isAssignableFrom(int.class)) {
+					int f = (Integer) PropertyUtils.getProperty(this, field
+							.getName());
+					log.debug("date:" + f);
+					line.put(columnName + ":", Bytes.toBytes(f));
+				}
+				if (field.getType().isAssignableFrom(Long.class)) {
+					Long f = (Long) PropertyUtils.getProperty(this, field
+							.getName());
+					log.debug("date:" + f);
+					line.put(columnName + ":", Bytes.toBytes(f));
+				}
+
+				if (field.getType().isAssignableFrom(String.class)) {
+					String value = BeanUtils.getProperty(this, field.getName());
+					if (StringUtils.isEmpty(value)) {
+						continue;
+					}
+					line.put(columnName + ":", value
+							.getBytes(HConstants.UTF8_ENCODING));
+				}
 			}
 
 		} catch (IllegalArgumentException e) {
@@ -104,7 +152,7 @@ public class Action {
 	 * 创建或者更新，根据ID策略，自动生成ID
 	 * 
 	 * @param t
-	 * @param clazz
+	 * @param fieldsObj
 	 * @return
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
@@ -114,14 +162,14 @@ public class Action {
 	 * @throws NoSuchMethodException
 	 * @throws MokiException
 	 */
-	private String getId(Table t, Class<? extends Action> clazz) {
+	private String getId(Table t, Map<String, Field> fieldsObj) {
 		String idValue = null;
 		try {
 			idValue = BeanUtils.getProperty(this, "id");
 			// 构造ID value;创建和更新
 			if (StringUtils.isBlank(idValue)) {
-				//Field idField = clazz.get("id");
-				Field idField=MyHbaseUtil.getField(clazz, "id");
+				Field idField = fieldsObj.get("id");
+				// Field idField=MyHbaseUtil.getField(clazz, "id");
 				ID annotation = idField.getAnnotation(ID.class);
 				IdType value = annotation.value();
 				if (value.equals(IdType.INC)) {
@@ -186,25 +234,84 @@ public class Action {
 				throw new RuntimeException("id don't is null");
 			}
 
-//			Map<String, Field> fieldsObj = MyHbaseUtil.getFileds(clazz);
-			
 			RowResult row = htable.getRow(idValue);
 			log.debug(row);
 			if (row.size() <= 0) {
 				return null;
 			}
-			for (Entry<byte[], Cell> entry : row.entrySet()) {
-				String key = new String(entry.getKey()).replace(":", "");
-				String value = new String(entry.getValue().getValue(),
-						HConstants.UTF8_ENCODING);
-				if (value == null) {
+
+			for (Entry<String, Field> entry : MyHbaseUtil.getFileds(clazz)
+					.entrySet()) {
+				Field field = entry.getValue();
+				Column annotation = field.getAnnotation(Column.class);
+				if (annotation == null)
+					continue;
+
+				String name = annotation.name();
+				Cell value = row.get(name + ":");
+
+				if (value == null || value.getValue() == null) {
 					continue;
 				}
-				log.debug(key + "=>" + value);
-				//Field field = fieldsObj.get(key);
-				Field field = MyHbaseUtil.getField(clazz, key);
-				BeanUtils.setProperty(this, field.getName(), value);
+				String attrValue = new String(value.getValue(),
+						HConstants.UTF8_ENCODING);
+
+				if (field.getType().isAssignableFrom(Map.class)) {
+					log.debug("map type name:" + name + " value:" + attrValue);
+					Map<String, String> obj = new HashMap<String, String>();
+					for (byte[] key1 : row.keySet()) {
+						String key = new String(key1);
+						if (key.startsWith(name)) {
+							Cell valueline = row.get(key);
+							if (valueline == null
+									|| valueline.getValue() == null) {
+								continue;
+							}
+							key = key.substring((name + ":").length());
+							String vlaue1 = new String(valueline.getValue(),
+									HConstants.UTF8_ENCODING);
+							obj.put(key, vlaue1);
+						}
+					}
+					PropertyUtils.setProperty(this, field.getName(), obj);
+
+				}
+
+				if (field.getType().isAssignableFrom(Date.class)) {
+					PropertyUtils.setProperty(this, field.getName(), new Date(
+							Bytes.toLong(value.getValue())));
+
+				}
+
+				if (field.getType().isAssignableFrom(Integer.class)) {
+					PropertyUtils.setProperty(this, field.getName(), Bytes
+							.toInt(value.getValue()));
+
+				}
+
+				if (field.getType().isAssignableFrom(Long.class)) {
+					PropertyUtils.setProperty(this, field.getName(), Bytes
+							.toLong(value.getValue()));
+
+				}
+
+				if (field.getType().isAssignableFrom(String.class)) {
+					PropertyUtils.setProperty(this, field.getName(), attrValue);
+					log.debug("common type name:" + field.getName() + " value:"
+							+ value);
+				}
 			}
+
+			// PropertyDescriptor[] propertyDescriptors = PropertyUtils
+			// .getPropertyDescriptors(clazz);
+			// for (PropertyDescriptor propertyDescriptor : propertyDescriptors)
+			// {
+			// log.debug(propertyDescriptor.getName());
+			// log.debug(row.get(propertyDescriptor.getName()));
+			// //
+			// log.debug(propertyDescriptor.getValue(propertyDescriptor.getName()));
+			// }
+			//
 
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -224,5 +331,4 @@ public class Action {
 		}
 		return this;
 	}
-
 }
