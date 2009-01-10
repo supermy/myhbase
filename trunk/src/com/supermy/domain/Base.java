@@ -11,7 +11,7 @@ public class Base extends Action{
 	private String id;
 	
 	@Column(name="createtime")
-	private Date createTime;
+	private Date createTime=new Date();;
 
 	
 	/**
