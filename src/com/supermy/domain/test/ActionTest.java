@@ -4,6 +4,7 @@
 package com.supermy.domain.test;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,19 +34,31 @@ public class ActionTest {
 		User newu = new User("tiger");
 		newu.setId("xyz");
 		newu.setAge(33);
-		Map<String, String> contact = new HashMap<String, String>();
+		Map<String, Object> contact = new HashMap<String, Object>();
 		contact.put("contact", "中关村");
 		contact.put("email", "yy@yy.com");
 		contact.put("qq", "123456");
 		contact.put("msn", "msn@msn.com");
+		contact.put("test1", 12);
+		contact.put("test2", Long.parseLong("123456"));
+		Date value = new Date();
+		contact.put("test3", value);
+
 		newu.setContact(contact);
 		newu.setSex("男");
 		newu.saveOrUpdate();
+//		Assert.assertTrue(false);
 		// get
 		User uu = new User(null);
 		uu.setId("xyz");
 		uu.get();
 		Assert.assertEquals(uu.getName(), "tiger");
+		Map<String, Object> contact2 = uu.getContact();
+		log.debug(contact2);
+		Assert.assertEquals(contact2.get("test1"), 12);
+		Assert.assertEquals(contact2.get("test2"), Long
+				.parseLong("123456"));
+		Assert.assertEquals(contact2.get("test3"), value);
 		log.debug(uu);
 
 		// Assert.assertTrue(false);
@@ -55,6 +68,10 @@ public class ActionTest {
 		uu.saveOrUpdate();
 		uu.get();
 		Assert.assertEquals(uu.getName(), "pig");
+		Assert.assertEquals(contact2.get("test1"), 12);
+		Assert.assertEquals(contact2.get("test2"), Long
+				.parseLong("123456"));
+		Assert.assertEquals(contact2.get("test3"), value);		
 		log.debug(uu);
 		// delete
 		uu.delete();

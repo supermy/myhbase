@@ -1,11 +1,12 @@
 package com.supermy.domain;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import com.supermy.annotation.Column;
 import com.supermy.annotation.ID;
 
-public class Base extends Action{
+public class Base extends Action implements Serializable{
 
 	@ID
 	private String id;
