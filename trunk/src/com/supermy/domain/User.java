@@ -15,7 +15,7 @@ public class User extends Base {
 	@Column(name = "age")
 	private int age;
 	@Column(name = "contact")
-	private Map<String, String> contact;
+	private Map<String, Object> contact;
 
 	public String toString() {
 		if (name == null) {
@@ -80,7 +80,7 @@ public class User extends Base {
 	/**
 	 * @return the contact
 	 */
-	public Map<String, String> getContact() {
+	public Map<String, Object> getContact() {
 		return contact;
 	}
 
@@ -88,7 +88,7 @@ public class User extends Base {
 	 * @param contact
 	 *            the contact to set
 	 */
-	public void setContact(Map<String, String> contact) {
+	public void setContact(Map<String, Object> contact) {
 		this.contact = contact;
 	}
 

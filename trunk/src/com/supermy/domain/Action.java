@@ -1,7 +1,7 @@
 package com.supermy.domain;
 
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -9,13 +9,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -78,54 +77,7 @@ public class Action {
 			for (HColumnDescriptor columnDescriptor : familiesDb) {
 				String columnName = columnDescriptor.getNameAsString();
 				log.debug(columnName);
-
-				Field field = fieldsObj.get(columnName);
-				// TODO 其他类型支持
-				if (field.getType().isAssignableFrom(Map.class)) {
-					Map<String, String> f = new HashMap<String, String>();
-					f = (Map<String, String>) PropertyUtils.getProperty(this,
-							field.getName());
-					log.debug("map:" + f);
-					if (f == null || f.size() <= 0) {
-						continue;
-					}
-					for (Entry<String, String> entry : f.entrySet()) {
-						StringBuffer key = new StringBuffer(columnName).append(
-								":").append(entry.getKey());
-
-						line.put(key.toString(), entry.getValue().getBytes(
-								HConstants.UTF8_ENCODING));
-					}
-
-				}
-
-				if (field.getType().isAssignableFrom(Date.class)) {
-					Date f = (Date) PropertyUtils.getProperty(this, field
-							.getName());
-					log.debug("date:" + f);
-					line.put(columnName + ":", Bytes.toBytes(f.getTime()));
-				}
-				if (field.getType().isAssignableFrom(int.class)) {
-					int f = (Integer) PropertyUtils.getProperty(this, field
-							.getName());
-					log.debug("date:" + f);
-					line.put(columnName + ":", Bytes.toBytes(f));
-				}
-				if (field.getType().isAssignableFrom(Long.class)) {
-					Long f = (Long) PropertyUtils.getProperty(this, field
-							.getName());
-					log.debug("date:" + f);
-					line.put(columnName + ":", Bytes.toBytes(f));
-				}
-
-				if (field.getType().isAssignableFrom(String.class)) {
-					String value = BeanUtils.getProperty(this, field.getName());
-					if (StringUtils.isEmpty(value)) {
-						continue;
-					}
-					line.put(columnName + ":", value
-							.getBytes(HConstants.UTF8_ENCODING));
-				}
+				typeConvert2Db(this, line, fieldsObj, columnName);
 			}
 
 		} catch (IllegalArgumentException e) {
@@ -146,6 +98,146 @@ public class Action {
 			throw new RuntimeException(e);
 		}
 		return line;
+	}
+
+	/**
+	 * 数据类型转换
+	 * 
+	 * @param line
+	 * @param fieldsObj
+	 * @param columnName
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws UnsupportedEncodingException
+	 */
+	private void typeConvert2Db(Object obj, BatchUpdate line,
+			Map<String, Field> fieldsObj, String columnName)
+			throws IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException, UnsupportedEncodingException {
+		Field field = fieldsObj.get(columnName);
+		// TODO 其他类型支持
+		// convertMap2Db(obj, line, columnName, field);
+		convertMap2DbSerializable(obj, line, columnName, field);
+
+		convertDate2Db(obj, line, columnName, field);
+		convertInt2Db(obj, line, columnName, field);
+		convertLong2Db(obj, line, columnName, field);
+		convertString2Db(obj, line, columnName, field);
+
+	}
+
+	private void convertMap2DbSerializable(Object obj, BatchUpdate line,
+			String columnName, Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException,
+			UnsupportedEncodingException {
+		if (!(field.getType().isAssignableFrom(String.class)
+				|| field.getType().isAssignableFrom(int.class)
+				|| field.getType().isAssignableFrom(Integer.class)
+				|| field.getType().isAssignableFrom(long.class)
+				|| field.getType().isAssignableFrom(Long.class) || field
+				.getType().isAssignableFrom(Date.class))) {
+
+			Object property = PropertyUtils.getProperty(obj, field.getName());
+			log.debug("map:" + property);
+			if (property == null)
+				return;
+			line.put(columnName + ":serializable", SerializationUtils
+					.serialize((Serializable) property));
+		}
+	}
+
+	private void convertMap2Db(Object obj, BatchUpdate line, String columnName,
+			Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException,
+			UnsupportedEncodingException {
+		if (field.getType().isAssignableFrom(Map.class)) {
+
+			Object property = PropertyUtils.getProperty(obj, field.getName());
+			Map<String, Object> f = (Map<String, Object>) property;
+			log.debug("map:" + f);
+			if (f == null || f.size() <= 0) {
+				return;
+			}
+
+			for (Entry<String, Object> entry : f.entrySet()) {
+				StringBuffer key = new StringBuffer(columnName).append(":")
+						.append(entry.getKey());
+				Object value = entry.getValue();
+				if (value.getClass().isAssignableFrom(int.class)
+						|| value.getClass().isAssignableFrom(Integer.class)) {
+					line.put(key.toString(), Bytes.toBytes((Integer) value));
+					line.put(key.toString() + "_type", Integer.class.getName()
+							.getBytes());
+				}
+				if (value.getClass().isAssignableFrom(long.class)
+						|| value.getClass().isAssignableFrom(Long.class)) {
+					line.put(key.toString(), Bytes.toBytes((Long) value));
+					line.put(key.toString() + "_type", Long.class.getName()
+							.getBytes());
+				}
+				if (value.getClass().isAssignableFrom(Date.class)) {
+					line.put(key.toString(), Bytes.toBytes(((Date) value)
+							.getTime()));
+					line.put(key.toString() + "_type", Date.class.getName()
+							.getBytes());
+				}
+				if (value.getClass().isAssignableFrom(String.class)) {
+					line.put(key.toString(), value.toString().getBytes(
+							HConstants.UTF8_ENCODING));
+					line.put(key.toString() + "_type", String.class.getName()
+							.getBytes());
+				}
+			}
+
+		}
+	}
+
+	private void convertString2Db(Object obj, BatchUpdate line,
+			String columnName, Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException,
+			UnsupportedEncodingException {
+		if (field.getType().isAssignableFrom(String.class)) {
+			String value = BeanUtils.getProperty(obj, field.getName());
+			if (StringUtils.isEmpty(value)) {
+				return;
+			}
+			line
+					.put(columnName + ":", value
+							.getBytes(HConstants.UTF8_ENCODING));
+		}
+	}
+
+	private void convertLong2Db(Object obj, BatchUpdate line,
+			String columnName, Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
+		if (field.getType().isAssignableFrom(Long.class)
+				|| field.getType().isAssignableFrom(long.class)) {
+			log.debug("long:" + columnName);
+			Long f = (Long) PropertyUtils.getProperty(obj, field.getName());
+			line.put(columnName + ":", Bytes.toBytes(f));
+		}
+	}
+
+	private void convertInt2Db(Object obj, BatchUpdate line, String columnName,
+			Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
+		if (field.getType().isAssignableFrom(int.class)
+				|| field.getType().isAssignableFrom(Integer.class)) {
+			log.debug("int:" + columnName);
+			int f = (Integer) PropertyUtils.getProperty(obj, field.getName());
+			line.put(columnName + ":", Bytes.toBytes(f));
+		}
+	}
+
+	private void convertDate2Db(Object obj, BatchUpdate line,
+			String columnName, Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
+		if (field.getType().isAssignableFrom(Date.class)) {
+			log.debug("Date:" + columnName);
+			Date f = (Date) PropertyUtils.getProperty(obj, field.getName());
+			line.put(columnName + ":", Bytes.toBytes(f.getTime()));
+		}
 	}
 
 	/**
@@ -224,12 +316,13 @@ public class Action {
 	}
 
 	public Object get() {
+		Object action = this;
 		try {
 			Class<? extends Action> clazz = getClass();
 			Table t = clazz.getAnnotation(Table.class);
 			HTable htable = MyHbaseUtil.getTable(t.name());
 
-			String idValue = BeanUtils.getProperty(this, "id");
+			String idValue = BeanUtils.getProperty(action, "id");
 			if (idValue == null) {
 				throw new RuntimeException("id don't is null");
 			}
@@ -249,57 +342,25 @@ public class Action {
 
 				String name = annotation.name();
 				Cell value = row.get(name + ":");
+				log.debug("name:" + name + " value:" + value);
 
-				if (value == null || value.getValue() == null) {
+				if ((value == null || value.getValue() == null)
+						&& !field.getType().isAssignableFrom(Map.class)) {
 					continue;
 				}
-				String attrValue = new String(value.getValue(),
-						HConstants.UTF8_ENCODING);
+				// String attrValue = new String(value.getValue(),
+				// HConstants.UTF8_ENCODING);
 
-				if (field.getType().isAssignableFrom(Map.class)) {
-					log.debug("map type name:" + name + " value:" + attrValue);
-					Map<String, String> obj = new HashMap<String, String>();
-					for (byte[] key1 : row.keySet()) {
-						String key = new String(key1);
-						if (key.startsWith(name)) {
-							Cell valueline = row.get(key);
-							if (valueline == null
-									|| valueline.getValue() == null) {
-								continue;
-							}
-							key = key.substring((name + ":").length());
-							String vlaue1 = new String(valueline.getValue(),
-									HConstants.UTF8_ENCODING);
-							obj.put(key, vlaue1);
-						}
-					}
-					PropertyUtils.setProperty(this, field.getName(), obj);
+				// convertMap2Obj(action, row, field, name, value);
+				convertMap2ObjSerializable(action, row, field, name);
 
-				}
+				convertDate2Obj(action, field, value);
 
-				if (field.getType().isAssignableFrom(Date.class)) {
-					PropertyUtils.setProperty(this, field.getName(), new Date(
-							Bytes.toLong(value.getValue())));
+				convertInt2Obj(action, field, value);
 
-				}
+				convertLong2Obj(action, field, value);
 
-				if (field.getType().isAssignableFrom(Integer.class)) {
-					PropertyUtils.setProperty(this, field.getName(), Bytes
-							.toInt(value.getValue()));
-
-				}
-
-				if (field.getType().isAssignableFrom(Long.class)) {
-					PropertyUtils.setProperty(this, field.getName(), Bytes
-							.toLong(value.getValue()));
-
-				}
-
-				if (field.getType().isAssignableFrom(String.class)) {
-					PropertyUtils.setProperty(this, field.getName(), attrValue);
-					log.debug("common type name:" + field.getName() + " value:"
-							+ value);
-				}
+				convertString2Obj(action, field, value);
 			}
 
 			// PropertyDescriptor[] propertyDescriptors = PropertyUtils
@@ -328,7 +389,122 @@ public class Action {
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		return this;
+		return action;
+	}
+
+	private void convertString2Obj(Object action, Field field, Cell value)
+			throws IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException, UnsupportedEncodingException {
+		if (field.getType().isAssignableFrom(String.class)) {
+			String attrValue = new String(value.getValue(),
+					HConstants.UTF8_ENCODING);
+
+			PropertyUtils.setProperty(action, field.getName(), attrValue);
+			log.debug("common type name:" + field.getName() + " value:"
+					+ attrValue);
+		}
+	}
+
+	private void convertLong2Obj(Object action, Field field, Cell value)
+			throws IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException {
+		if (field.getType().isAssignableFrom(Long.class)) {
+			PropertyUtils.setProperty(action, field.getName(), Bytes
+					.toLong(value.getValue()));
+
+		}
+	}
+
+	private void convertInt2Obj(Object action, Field field, Cell value)
+			throws IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException {
+		if (field.getType().isAssignableFrom(Integer.class)) {
+			PropertyUtils.setProperty(action, field.getName(), Bytes
+					.toInt(value.getValue()));
+
+		}
+	}
+
+	private void convertDate2Obj(Object action, Field field, Cell value)
+			throws IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException {
+		if (field.getType().isAssignableFrom(Date.class)) {
+			PropertyUtils.setProperty(action, field.getName(), new Date(Bytes
+					.toLong(value.getValue())));
+
+		}
+	}
+
+	private void convertMap2ObjSerializable(Object action, RowResult row,
+			Field field, String name) throws UnsupportedEncodingException,
+			IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException, ClassNotFoundException {
+
+		if (!(field.getType().isAssignableFrom(String.class)
+				|| field.getType().isAssignableFrom(int.class)
+				|| field.getType().isAssignableFrom(Integer.class)
+				|| field.getType().isAssignableFrom(long.class)
+				|| field.getType().isAssignableFrom(Long.class) || field
+				.getType().isAssignableFrom(Date.class))) {
+
+			log.debug("map type name:" + name);
+			Cell value = row.get(name + ":serializable");
+
+			Object deserialize = SerializationUtils.deserialize(value
+					.getValue());
+			// Map<String, Object> obj = (Map<String, Object>) deserialize;
+			log.debug(deserialize);
+			PropertyUtils.setProperty(action, field.getName(), deserialize);
+		}
+	}
+
+	private void convertMap2Obj(Object action, RowResult row, Field field,
+			String name, Cell attrValue) throws UnsupportedEncodingException,
+			IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException, ClassNotFoundException {
+
+		log.debug("================:" + field.getType().getName());
+		log.debug(field.getType().isAssignableFrom(Map.class));
+
+		if (field.getType().isAssignableFrom(Map.class)) {
+			log.debug("map type name:" + name);
+			Map<String, Object> obj = new HashMap<String, Object>();
+			for (byte[] key1 : row.keySet()) {
+				String key = new String(key1);
+				if (key.startsWith(name) && !key.contains("_type")
+						&& !key.contains("serializable")) {
+					Cell valueline = row.get(key);
+					byte[] value = valueline.getValue();
+					if (valueline == null || value == null) {
+						continue;
+					}
+					log.debug(key);
+					String type = new String(row.get(key + "_type").getValue());
+					log.debug(type);
+					key = key.substring((name + ":").length());
+					if (type.equalsIgnoreCase(Integer.class.getName())) {
+						obj.put(key, Bytes.toInt(value));
+					}
+					if (type.equalsIgnoreCase(Long.class.getName())) {
+						obj.put(key, Bytes.toLong(value));
+					}
+					if (type.equalsIgnoreCase(Date.class.getName())) {
+						obj.put(key, new Date(Bytes.toLong(value)));
+					}
+					if (type.equalsIgnoreCase(String.class.getName())) {
+						String vlaue1 = new String(value,
+								HConstants.UTF8_ENCODING);
+						obj.put(key, vlaue1);
+					}
+				}
+			}
+			log.debug(obj);
+			PropertyUtils.setProperty(action, field.getName(), obj);
+
+		}
 	}
 }
