@@ -5,7 +5,7 @@ import com.supermy.annotation.Many2One;
 import com.supermy.annotation.Table;
 
 @Table(name = "forum_test")
-public class Forum extends Base {
+public class Forum extends Action {
 
 	// @ID("auto")
 	// public String id;
