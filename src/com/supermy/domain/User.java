@@ -3,11 +3,19 @@ package com.supermy.domain;
 import java.util.Map;
 
 import com.supermy.annotation.Column;
+import com.supermy.annotation.ID;
 import com.supermy.annotation.Table;
+import com.supermy.annotation.ID.IdType;
 
 @Table(name = "user_test")
-public class User extends Base {
+public class User extends Action {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
 	@Column(name = "name", bloomfilter = true)
 	private String name;
 	@Column(name = "sex")
@@ -16,21 +24,13 @@ public class User extends Base {
 	private int age;
 	@Column(name = "contact")
 	private Map<String, Object> contact;
-
-	public String toString() {
-		if (name == null) {
-			return "";
-		}
-		StringBuffer sb = new StringBuffer(name);
-		sb.append(";").append(sex).append(";").append(age).append(";").append(
-				contact + " createtime:" + getCreateTime());
-		return sb.toString();
-
+	public User() {
 	}
 
 	public User(String name) {
 		this.name = name;
 	}
+
 
 	/**
 	 * @return the name

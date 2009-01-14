@@ -14,13 +14,15 @@ import java.lang.annotation.Target;
  * @author my
  * 
  */
-@Target(ElementType.FIELD)
+//@Target( { ElementType.FIELD, ElementType.TYPE })
+@Target( { ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 public @interface ID {
 	public enum IdType {
-		INC, UUID, ParentChild
+		INC, UUID, ParentChild,MD5
 	}
 	IdType value() default IdType.UUID;
+	String md5FieldName() default "name";
 }

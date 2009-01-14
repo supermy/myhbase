@@ -32,7 +32,7 @@ public class ActionTest {
 		log.debug("start create hbase record... ...");
 		// create
 		User newu = new User("tiger");
-		newu.setId("xyz");
+		//newu.setId("xyz");
 		newu.setAge(33);
 		Map<String, Object> contact = new HashMap<String, Object>();
 		contact.put("contact", "中关村");
@@ -47,12 +47,15 @@ public class ActionTest {
 		newu.setContact(contact);
 		newu.setSex("男");
 		newu.saveOrUpdate();
-//		Assert.assertTrue(false);
+		//log.debug(newu.getId());
+		//Assert.assertTrue(false);
 		// get
 		User uu = new User(null);
 		uu.setId("xyz");
-		uu.get();
+		uu=(User)uu.get();
+		log.debug(uu);
 		Assert.assertEquals(uu.getName(), "tiger");
+		
 		Map<String, Object> contact2 = uu.getContact();
 		log.debug(contact2);
 		Assert.assertEquals(contact2.get("test1"), 12);

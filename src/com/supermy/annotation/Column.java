@@ -28,5 +28,4 @@ public @interface Column {
 	CompressionType compressionType() default CompressionType.NONE;
 	boolean blockCacheEnabled() default false;
 	int maxVersions() default 2;
-	
 }

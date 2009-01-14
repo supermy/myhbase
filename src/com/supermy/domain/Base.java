@@ -3,10 +3,13 @@ package com.supermy.domain;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 import com.supermy.annotation.Column;
 import com.supermy.annotation.ID;
 
-public class Base extends Action implements Serializable{
+public abstract class Base implements Serializable{
 
 	@ID
 	private String id;
@@ -45,6 +48,12 @@ public class Base extends Action implements Serializable{
 		this.id = id;
 	}
 
+	@Override
+	public String toString() {
+		return
+		 ToStringBuilder.reflectionToString(this,ToStringStyle.MULTI_LINE_STYLE);
+	}
+	
 	/**
 	 * @param args
 	 */
