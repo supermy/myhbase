@@ -28,7 +28,6 @@ import org.apache.hadoop.hbase.io.Cell;
 import org.apache.hadoop.hbase.io.RowResult;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import tv.movo.exception.MokiException;
 import tv.movo.utils.MD5;
 
 import com.supermy.annotation.Column;
@@ -226,7 +225,7 @@ public class ConvertBean {
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 * @throws NoSuchMethodException
-	 * @throws MokiException
+	 * @throws MyHBaseException
 	 */
 	private String getId(String tableName, Map<String, Field> fieldsObj,
 			Action obj) {
@@ -262,7 +261,7 @@ public class ConvertBean {
 					idValue = UUID.randomUUID().toString();
 				}
 			}
-		} catch (MokiException e) {
+		} catch (MyHBaseException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {

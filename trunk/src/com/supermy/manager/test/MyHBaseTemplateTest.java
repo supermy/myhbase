@@ -4,7 +4,6 @@
 package com.supermy.manager.test;
 
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,14 +11,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import tv.movo.exception.MokiException;
+import tv.movo.utils.MD5;
 
+import com.supermy.domain.Action;
 import com.supermy.domain.User;
 import com.supermy.manager.MyHBaseTemplate;
+import com.supermy.utils.MyHBaseException;
 
 /**
  * @author my
@@ -29,9 +31,26 @@ public class MyHBaseTemplateTest {
 	private static final Log log=LogFactory.getLog(MyHBaseTemplateTest.class);
 	MyHBaseTemplate template;
 	User newu;
-		
+
 	@Test
-	public void findUserByName() throws MokiException{
+	public void userRegister() throws MyHBaseException{
+		User newuser = new User();
+		newuser.setEmail("springclick@gmail.com");
+		newuser.setPassword("111111");
+		newuser.setId(MD5.getMD5("springclick@gmail.com".getBytes()));
+		
+		//email要唯一
+		User userByEmail = template.getUserByEmail(newuser.getEmail());
+		if (userByEmail!=null) {
+			throw new MyHBaseException("用户已经存在");
+		}
+		newuser.saveOrUpdate();
+		log.debug(newuser.get());
+		
+	}
+	
+	@Test
+	public void findUserByName() throws MyHBaseException{
 		log.debug("find user by name ... ...");
 		String name="tiger";
 		//返回一个对象
@@ -41,6 +60,19 @@ public class MyHBaseTemplateTest {
 		
 	}
 
+	@Test
+	public void TypeNull() throws MyHBaseException{
+		log.debug("find user by name ... ...");
+		User u=(User)null;
+		String  s=(String)null;
+		//List<Action> list=new ArrayList<Action>();
+		//u=(User)list.get(0);
+		Map<String ,Action > m=new HashMap<String, Action>();
+		u=(User)m.get("");
+ 		Assert.assertTrue(true);
+	}
+
+	
 	/**
 	 * @throws java.lang.Exception
 	 */
