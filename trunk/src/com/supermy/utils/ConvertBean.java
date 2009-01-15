@@ -28,8 +28,6 @@ import org.apache.hadoop.hbase.io.Cell;
 import org.apache.hadoop.hbase.io.RowResult;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import tv.movo.utils.MD5;
-
 import com.supermy.annotation.Column;
 import com.supermy.annotation.ID;
 import com.supermy.annotation.Table;
@@ -235,8 +233,8 @@ public class ConvertBean {
 			idValue = obj.getId();
 			// 构造ID value;创建和更新
 			if (StringUtils.isBlank(idValue)) {
-				
-				//md5的配置，完全可以直接给ID赋值
+
+				// md5的配置，完全可以直接给ID赋值
 				ID childId = obj.getClass().getAnnotation(ID.class);
 				if (childId != null) {
 					if (childId.value().equals(IdType.MD5)) {
@@ -249,7 +247,7 @@ public class ConvertBean {
 								"ID is md5 ,property value is not null !");
 					}
 				}
-				//md5 end
+				// md5 end
 
 				Field idField = fieldsObj.get("id");
 				ID annotation = idField.getAnnotation(ID.class);
@@ -315,15 +313,11 @@ public class ConvertBean {
 			UnsupportedEncodingException {
 
 		if (field.getType().isAssignableFrom(Map.class)) {
-			// 属性值
-			Object property = PropertyUtils.getProperty(obj, field.getName());
-			if (property == null) {
-				return;
-			}
 			// 类型转换
-			Map<String, Object> propertyValue = (Map<String, Object>) property;
+			Map<String, Object> propertyValue = (Map<String, Object>) PropertyUtils
+					.getProperty(obj, field.getName());
 			log.debug("map:" + propertyValue);
-			if (propertyValue.size() <= 0) {
+			if (propertyValue == null || propertyValue.size() <= 0) {
 				return;
 			}
 
@@ -408,7 +402,7 @@ public class ConvertBean {
 	public Action hbaserow2object(RowResult row, Action obj) {
 		log.debug("hbaserow2object(RowResult row, Action obj)");
 		try {
-			
+
 			String key = new String(row.getRow());
 			obj.setId(key);
 

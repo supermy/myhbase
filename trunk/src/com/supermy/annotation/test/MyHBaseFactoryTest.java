@@ -35,7 +35,7 @@ public class MyHBaseFactoryTest {
 
 	@Test
 	public void inheritedInstanceField() {
-		User u = new User("tiger");
+		User u = new User("tiger@mm.com");
 		Field[] fields = u.getClass().getDeclaredFields();
 		for (Field field : fields) {
 			log.debug(field);
