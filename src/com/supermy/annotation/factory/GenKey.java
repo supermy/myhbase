@@ -6,8 +6,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.BatchUpdate;
 import org.apache.hadoop.hbase.io.Cell;
 
-import tv.movo.exception.MokiException;
-
+import com.supermy.utils.MyHBaseException;
 import com.supermy.utils.MyHbaseUtil;
 
 public class GenKey {
@@ -24,10 +23,10 @@ public class GenKey {
 	 * @param primaryKey
 	 * @param tableName
 	 * @return
-	 * @throws MokiException
+	 * @throws MyHBaseException
 	 */
 	public String genAutoIncreasePrimaryKey(String tableName)
-			throws MokiException {
+			throws MyHBaseException {
 		String value = "1";
 		try {
 			Cell cell = primaryKey.get(tableName, "primarykey:");
@@ -44,7 +43,7 @@ public class GenKey {
 			primaryKey.commit(key);
 		} catch (IOException e) {
 			e.printStackTrace();
-			//throw new MokiException(e.getLocalizedMessage());
+			//throw new MyHBaseException(e.getLocalizedMessage());
 			throw new RuntimeException(e);
 		}
 		return value;
@@ -57,10 +56,10 @@ public class GenKey {
 	 * @param key
 	 * @param x
 	 * @return
-	 * @throws MokiException
+	 * @throws MyHBaseException
 	 */
 	public String genAutoIncLoginKey(String tableName, String key, String... x)
-			throws MokiException {
+			throws MyHBaseException {
 		StringBuilder sb = new StringBuilder();
 		for (String param : x) {
 			sb.append(param);
@@ -72,7 +71,7 @@ public class GenKey {
 		return new String(sb);
 	}
 
-	public String UUID() throws MokiException {
+	public String UUID() throws MyHBaseException {
 		return java.util.UUID.randomUUID().toString();
 	}
 

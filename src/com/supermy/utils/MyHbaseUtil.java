@@ -37,6 +37,7 @@ public class MyHbaseUtil {
 	private static ConcurrentMap<String, HTable> tables = new ConcurrentHashMap<String, HTable>();
 	private static ConcurrentMap<String, HTableDescriptor> tableDescs = new ConcurrentHashMap<String, HTableDescriptor>();
 	private static ConcurrentMap<String, Map<String, Field>> fileds = new ConcurrentHashMap<String, Map<String, Field>>();
+	private static ConcurrentMap<String, Map<String, String>> properties = new ConcurrentHashMap<String, Map<String, String>>();
 
 	static {
 		ResourceBundle bundle = ResourceBundle.getBundle("myhbase");
@@ -159,6 +160,20 @@ public class MyHbaseUtil {
 		return result;
 	}
 
+	private static Map<String, String> genProperties(Class<?> class1) {
+		Map<String, String> result = new HashMap<String, String>();
+		List<Field> list = new ArrayList<Field>();
+		list = walk4field(class1, list);
+		for (Field field : list) {
+			Column annotation = field.getAnnotation(Column.class);
+			log.debug(annotation);
+			log.debug(field);
+			if (annotation != null)
+				result.put(field.getName(), annotation.name());
+		}
+		return result;
+	}
+
 	/**
 	 * 缓存domain注释描述
 	 * 
@@ -174,33 +189,42 @@ public class MyHbaseUtil {
 		return map;
 	}
 
-//	/**
-//	 * 获取某个类的字段 hbase的名称与annon名称存在差异。
-//	 * 
-//	 * @param class1
-//	 * @param name
-//	 * @return
-//	 */
-//	@Deprecated
-//	public static Field getField(Class<?> class1, String name) {
-//		Field field = null;
-//		try {
-//			field = class1.getDeclaredField(name);
-//		} catch (SecurityException e) {
-//			e.printStackTrace();
-//			throw new RuntimeException(e);
-//		} catch (NoSuchFieldException e) {
-//			e.printStackTrace();
-//			log.info(e.getMessage());
-//			throw new RuntimeException(e);
-//		}
-//		if (field == null) {
-//			if (class1.getSuperclass() != null) {
-//				field = getField(class1.getSuperclass(), name);
-//			}
-//			return field;
-//		} else
-//			return field;
-//	}
+	public static Map<String, String> getProperties(Class<?> class1) {
+		Map<String, String> map = properties.get(class1.getName());
+		if (map == null) {
+			map = genProperties(class1);
+			properties.put(class1.getName(), map);
+		}
+		return map;
+	}
+
+	// /**
+	// * 获取某个类的字段 hbase的名称与annon名称存在差异。
+	// *
+	// * @param class1
+	// * @param name
+	// * @return
+	// */
+	// @Deprecated
+	// public static Field getField(Class<?> class1, String name) {
+	// Field field = null;
+	// try {
+	// field = class1.getDeclaredField(name);
+	// } catch (SecurityException e) {
+	// e.printStackTrace();
+	// throw new RuntimeException(e);
+	// } catch (NoSuchFieldException e) {
+	// e.printStackTrace();
+	// log.info(e.getMessage());
+	// throw new RuntimeException(e);
+	// }
+	// if (field == null) {
+	// if (class1.getSuperclass() != null) {
+	// field = getField(class1.getSuperclass(), name);
+	// }
+	// return field;
+	// } else
+	// return field;
+	// }
 
 }
