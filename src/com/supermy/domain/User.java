@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.supermy.annotation.Column;
 import com.supermy.annotation.Table;
+import com.supermy.utils.MD5;
 
 @Table(name = "user_test")
 public class User extends Action {
@@ -12,11 +13,12 @@ public class User extends Action {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	@Column(name = "email", bloomfilter = true)
 	private String email;
-	@Column(name = "email", bloomfilter = true)
+	@Column(name = "password", bloomfilter = true)
 	private String password;
+
 	@Column(name = "name")
 	private String name;
 	@Column(name = "sex")
@@ -25,13 +27,14 @@ public class User extends Action {
 	private int age;
 	@Column(name = "contact")
 	private Map<String, Object> contact;
+
 	public User() {
 	}
 
-	public User(String name) {
-		this.name = name;
+	public User(String email) {
+		this.email = email;
+		setId(MD5.getMD5(email.getBytes()));
 	}
-
 
 	/**
 	 * @return the name
@@ -101,7 +104,8 @@ public class User extends Action {
 	}
 
 	/**
-	 * @param email the email to set
+	 * @param email
+	 *            the email to set
 	 */
 	public void setEmail(String email) {
 		this.email = email;
@@ -115,11 +119,11 @@ public class User extends Action {
 	}
 
 	/**
-	 * @param password the password to set
+	 * @param password
+	 *            the password to set
 	 */
 	public void setPassword(String password) {
 		this.password = password;
 	}
 
-	
 }

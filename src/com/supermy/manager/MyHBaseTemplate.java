@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.HConstants;
@@ -25,15 +26,11 @@ import org.apache.hadoop.hbase.io.BatchUpdate;
 import org.apache.hadoop.hbase.io.Cell;
 import org.apache.hadoop.hbase.io.RowResult;
 
-import tv.movo.hbase.moki.MokiDBStruct;
-import tv.movo.translate.TransConstants;
-import tv.movo.utils.BaseSerializing;
-import tv.movo.utils.MD5;
-
 import com.supermy.annotation.Table;
 import com.supermy.domain.Action;
 import com.supermy.domain.User;
 import com.supermy.utils.ConvertBean;
+import com.supermy.utils.MD5;
 import com.supermy.utils.MyHBaseException;
 import com.supermy.utils.MyHbaseUtil;
 
@@ -109,14 +106,14 @@ public class MyHBaseTemplate {
 		if (columns.length != values.length) {
 			throw new MyHBaseException("列和列值的个数不一致!");
 		}
-		if (TransConstants.isBlank(rowKey)) {
+		if (StringUtils.isBlank(rowKey)) {
 			throw new MyHBaseException("rowKey为空!");
 		}
 		BatchUpdate rowBatchUpdate = new BatchUpdate(rowKey);
 		try {
 			for (int i = 0; i < columns.length; i++) {
 				String value = values[i];
-				if (TransConstants.isNotBlank(value)) {
+				if (StringUtils.isNotBlank(value)) {
 					String col = columns[i].trim();
 					col = col.contains(":") ? col : col.trim() + ":";
 					rowBatchUpdate.put(col, value
@@ -143,7 +140,7 @@ public class MyHBaseTemplate {
 	public BatchUpdate putColumnByRow(BatchUpdate bu, String column,
 			String value) throws MyHBaseException {
 		try {
-			if (TransConstants.isNotBlank(value)) {
+			if (StringUtils.isNotBlank(value)) {
 
 				// filterWords(value);// 自动翻译抓取网页，用户提交内容。
 
@@ -168,7 +165,7 @@ public class MyHBaseTemplate {
 		BatchUpdate result = new BatchUpdate(rowKey);
 		for (int i = 0; i < columns.length; i++) {
 			String col = columns[i];
-			if (TransConstants.isNotBlank(col)) {
+			if (StringUtils.isNotBlank(col)) {
 				col = col.contains(":") ? col : col.trim() + ":";
 			}
 			result.delete(col.getBytes());
@@ -499,7 +496,7 @@ public class MyHBaseTemplate {
 	public List<Map<String, String>> get(String tableName, String... columns)
 			throws MyHBaseException {
 		for (String col : columns) {
-			if (TransConstants.isNotBlank(col)) {
+			if (StringUtils.isNotBlank(col)) {
 				col = col.contains(":") ? col : col.trim() + ":";
 			}
 		}
@@ -518,48 +515,45 @@ public class MyHBaseTemplate {
 	 * @param words
 	 * @throws MyHBaseException
 	 */
-	public void putFilterWord(String words) throws MyHBaseException {
-		log.info("create db filter words ...");
-		HTable f = MyHbaseUtil.getTable(MokiDBStruct.FILTER_WORD);
-		BatchUpdate line = new BatchUpdate("1");
-		try {
-			line.put(MokiDBStruct.KEYWORD, words
-					.getBytes(HConstants.UTF8_ENCODING));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			throw new MyHBaseException(e.getMessage());
-		}
-		tableSubmit(f, line);
-	}
-
-	public String[] getFilterWord() throws MyHBaseException {
-		HTable f = MyHbaseUtil.getTable(MokiDBStruct.FILTER_WORD);
-		try {
-			RowResult row = f.getRow("1");
-			log.debug(row);
-			String key = new String(row.get(MokiDBStruct.KEYWORD).getValue(),
-					HConstants.UTF8_ENCODING);
-			return key.split(";|,");
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new MyHBaseException(e.getMessage());
-		}
-	}
-
-	public String getFilterWordX() throws MyHBaseException {
-		HTable f = MyHbaseUtil.getTable(MokiDBStruct.FILTER_WORD);
-		try {
-			RowResult row = f.getRow("1");
-			log.debug(row);
-			String key = new String(row.get(MokiDBStruct.KEYWORD).getValue(),
-					HConstants.UTF8_ENCODING);
-			return key;
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new MyHBaseException(e.getMessage());
-		}
-	}
-
+	// public void putFilterWord(String words) throws MyHBaseException {
+	// log.info("create db filter words ...");
+	// HTable f = MyHbaseUtil.getTable(MokiDBStruct.FILTER_WORD);
+	// BatchUpdate line = new BatchUpdate("1");
+	// try {
+	// line.put(MokiDBStruct.KEYWORD, words
+	// .getBytes(HConstants.UTF8_ENCODING));
+	// } catch (UnsupportedEncodingException e) {
+	// e.printStackTrace();
+	// throw new MyHBaseException(e.getMessage());
+	// }
+	// tableSubmit(f, line);
+	// }
+	// public String[] getFilterWord() throws MyHBaseException {
+	// HTable f = MyHbaseUtil.getTable(MokiDBStruct.FILTER_WORD);
+	// try {
+	// RowResult row = f.getRow("1");
+	// log.debug(row);
+	// String key = new String(row.get(MokiDBStruct.KEYWORD).getValue(),
+	// HConstants.UTF8_ENCODING);
+	// return key.split(";|,");
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// throw new MyHBaseException(e.getMessage());
+	// }
+	// }
+	// public String getFilterWordX() throws MyHBaseException {
+	// HTable f = MyHbaseUtil.getTable(MokiDBStruct.FILTER_WORD);
+	// try {
+	// RowResult row = f.getRow("1");
+	// log.debug(row);
+	// String key = new String(row.get(MokiDBStruct.KEYWORD).getValue(),
+	// HConstants.UTF8_ENCODING);
+	// return key;
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// throw new MyHBaseException(e.getMessage());
+	// }
+	// }
 	/**
 	 * true 表示没有敏感词； false表示有敏感词；
 	 * 
@@ -567,10 +561,9 @@ public class MyHBaseTemplate {
 	 * @return
 	 * @throws MyHBaseException
 	 */
-	public boolean filterWords(String content) throws MyHBaseException {
-		return TransConstants.filterWords(content, getFilterWord());
-	}
-
+	// public boolean filterWords(String content) throws MyHBaseException {
+	// return StringUtils.filterWords(content, getFilterWord());
+	// }
 	/**
 	 * 利用列存储的属性
 	 * 
@@ -579,38 +572,45 @@ public class MyHBaseTemplate {
 	 * @throws MyHBaseException
 	 */
 	@Deprecated
-	public void add(String key, Object value) throws MyHBaseException {
-		BatchUpdate line = new BatchUpdate(key);
-		BaseSerializing bs = new BaseSerializing();
-		line.put("value", bs.serialize(value));
-		// tableSubmit(caches, line);TODO
-	}
-
-	/**
+	// public void add(String key, Object value) throws MyHBaseException {
+	// BatchUpdate line = new BatchUpdate(key);
+	// BaseSerializing bs = new BaseSerializing();
+	// line.put("value", bs.serialize(value));
+	// // tableSubmit(caches, line);TODO
+	// }
+	/*
 	 * 利用key查询 //TODO
 	 * 
 	 * @param key
+	 * 
 	 * @param value
+	 * 
 	 * @throws MyHBaseException
 	 */
-	@Deprecated
-	public void delete(String key, Object value) throws MyHBaseException {
-		BatchUpdate line = new BatchUpdate(key);
-		BaseSerializing bs = new BaseSerializing();
-		line.put("value", bs.serialize(value));
-		// tableSubmit(caches, line); TODO
-	}
-
-	/**
+	// @Deprecated
+	// public void delete(String key, Object value) throws MyHBaseException {
+	// BatchUpdate line = new BatchUpdate(key);
+	// BaseSerializing bs = new BaseSerializing();
+	// line.put("value", bs.serialize(value));
+	// // tableSubmit(caches, line); TODO
+	// }
+	/*
 	 * 返回列可以返回指定属性的值，可以减轻对象的重量
 	 * 
 	 * @param clazz
+	 * 
 	 * @param columns
+	 * 
 	 * @param values
+	 * 
 	 * @param startRow
+	 * 
 	 * @param pageSize
+	 * 
 	 * @param returnCols
+	 * 
 	 * @return
+	 * 
 	 * @throws MyHBaseException
 	 */
 	public List<Action> find(Class<? extends Action> clazz, String[] columns,
@@ -742,7 +742,7 @@ public class MyHBaseTemplate {
 			} else {
 				row = table.getRow(rowKey);
 			}
-			if (row.size()<=0) {
+			if (row.size() <= 0) {
 				return null;
 			}
 			ConvertBean cb = new ConvertBean();
@@ -818,7 +818,45 @@ public class MyHBaseTemplate {
 	}
 
 	public User getUserByEmail(String email) throws MyHBaseException {
-		return (User)get(User.class, MD5.getMD5(email.getBytes()));
+		return (User) get(User.class, MD5.getMD5(email.getBytes()));
+	}
+
+	public void register(User user) throws MyHBaseException {
+		// email要唯一
+		User userByEmail = getUserByEmail(user.getEmail());
+		if (userByEmail != null) {
+			throw new MyHBaseException("用户已经存在");
+		}
+		user.saveOrUpdate();
+		log.debug(user.get());
+	}
+
+	public boolean login(User newuser) throws MyHBaseException {
+		User userByEmail = getUserByEmail(newuser.getEmail());
+		if (userByEmail == null) {
+			throw new MyHBaseException("用户名不存在！");
+		}
+		if (!userByEmail.getPassword().equalsIgnoreCase(newuser.getPassword())) {
+			throw new MyHBaseException("用户名或者口令不正确！");
+		}
+		log.debug("成功登录");
+		return true;
+	}
+
+	public void changePwd(User newuser, String newpassword)
+			throws MyHBaseException {
+		if (StringUtils.isBlank(newuser.getId())) {
+			throw new MyHBaseException("id不能为空......");
+		}
+		if (StringUtils.isBlank(newpassword)) {
+			throw new MyHBaseException("新口令不能为空......");
+		}
+		if (!login(newuser)) {
+			throw new MyHBaseException("非法用户......");
+		}
+		// 更改口令
+		newuser.setPassword(newpassword);
+		newuser.saveOrUpdate();
 	}
 
 }

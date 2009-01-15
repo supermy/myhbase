@@ -31,12 +31,12 @@ public class ActionTest {
 			InvocationTargetException, NoSuchMethodException {
 		log.debug("start create hbase record... ...");
 		// create
-		User newu = new User("tiger");
+		User newu = new User("yy@yy.com");
 		//newu.setId("xyz");
 		newu.setAge(33);
 		Map<String, Object> contact = new HashMap<String, Object>();
 		contact.put("contact", "中关村");
-		contact.put("email", "yy@yy.com");
+		contact.put("name", "tiger");
 		contact.put("qq", "123456");
 		contact.put("msn", "msn@msn.com");
 		contact.put("test1", 12);
@@ -50,7 +50,7 @@ public class ActionTest {
 		//log.debug(newu.getId());
 		//Assert.assertTrue(false);
 		// get
-		User uu = new User(null);
+		User uu = new User();
 		uu.setId("xyz");
 		uu=(User)uu.get();
 		log.debug(uu);
@@ -78,7 +78,7 @@ public class ActionTest {
 		log.debug(uu);
 		// delete
 		uu.delete();
-		User u3 = new User(null);
+		User u3 = new User();
 		u3.setId("xyz");
 		Object object = u3.get();
 		log.debug(u3);
@@ -88,7 +88,7 @@ public class ActionTest {
 	@Test
 	public void PropertyUtils() throws IllegalAccessException,
 			InvocationTargetException, NoSuchMethodException {
-		User u = new User("tiger");
+		User u = new User();
 		u.setId("xyz");
 		Map<String, String> describe = PropertyUtils.describe(u);
 		log.debug(describe);
