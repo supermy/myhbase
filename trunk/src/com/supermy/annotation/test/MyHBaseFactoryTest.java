@@ -3,6 +3,10 @@
  */
 package com.supermy.annotation.test;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -32,6 +36,20 @@ public class MyHBaseFactoryTest {
 	private static final Log log = LogFactory.getLog(MyHBaseFactoryTest.class);
 
 	MyHBaseFactory fac = new MyHBaseFactory();
+
+	@Test
+	public void beaninfo() throws IntrospectionException {
+		BeanInfo beanInfo = Introspector.getBeanInfo(User.class);
+		PropertyDescriptor[] propertyDescriptors = beanInfo
+				.getPropertyDescriptors();
+		for (PropertyDescriptor beanInfo2 : propertyDescriptors) {
+			log.debug(beanInfo2.getName());
+			log.debug(beanInfo2.getPropertyType());
+			log.debug(beanInfo2.getReadMethod());
+			log.debug(beanInfo2.getReadMethod().getAnnotations());
+		}
+
+	}
 
 	@Test
 	public void inheritedInstanceField() {
@@ -65,7 +83,8 @@ public class MyHBaseFactoryTest {
 		u.addFamily(family);
 		fac.autoObj2HBase(u);
 
-		HTable table = MyHbaseUtil.getTable("user_test");// fac.getTable("user_test");
+		
+		HTable table = MyHbaseUtil.getTable(TableUtil.getTable(User.class));// fac.getTable("user_test");
 		Assert.assertEquals(table.getTableDescriptor().getFamily(
 				family.getName()), family);
 

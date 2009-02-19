@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +22,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.HColumnDescriptor.CompressionType;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 
@@ -31,6 +31,8 @@ import com.supermy.annotation.ID;
 import com.supermy.annotation.Many2One;
 import com.supermy.annotation.One2Many;
 import com.supermy.annotation.Table;
+import com.supermy.annotation.Transient;
+import com.supermy.annotation.test.TableUtil;
 import com.supermy.utils.MyHbaseUtil;
 
 /**
@@ -43,20 +45,8 @@ public class MyHBaseFactory {
 	private HBaseAdmin admin = MyHbaseUtil.getAdmin();
 	private HBaseConfiguration hbc = MyHbaseUtil.getConfig();
 
-	//	
 	public MyHBaseFactory() {
 		super();
-		// ResourceBundle bundle = ResourceBundle.getBundle("myhbase");
-		// String value = bundle.getObject("hbase.master").toString();
-		// hbc = new HBaseConfiguration();
-		// hbc.set("hbase.master", value);
-		// try {
-		// admin = new HBaseAdmin(hbc);
-		// } catch (MasterNotRunningException e) {
-		// e.printStackTrace();
-		// log.error(e);
-		// throw new RuntimeException(e);
-		// }
 	}
 
 	public void shutdown() {
@@ -71,17 +61,17 @@ public class MyHBaseFactory {
 	/**
 	 * 生成hbase数据结构文件
 	 * 
-	 * @param class1
+	 * @param type
 	 * @param htd
 	 * @return
 	 */
-	public HTableDescriptor annotation2hbase(Class<?> class1) {
+	public HTableDescriptor annotation2hbase(Class<?> type) {
 		// 类处理
 		// 表的描述
 		HTableDescriptor htd = null;
-		if (class1.isAnnotationPresent(Table.class)) {
-			Table t = class1.getAnnotation(Table.class);
-			htd = new HTableDescriptor(t.name());
+		if (type.isAnnotationPresent(Table.class)) {
+			Table t = type.getAnnotation(Table.class);
+			htd = new HTableDescriptor(TableUtil.getTable(type));
 			htd.setInMemory(t.inMemory());
 			htd.setReadOnly(t.readOnly());
 		} else {
@@ -89,7 +79,7 @@ public class MyHBaseFactory {
 		}
 
 		List<Field> list = new ArrayList<Field>();
-		list = walk4field(class1, list);
+		list = walk4field(type, list);
 		// 字段的处理
 		for (Field field : list) {
 			log.debug("field:name======" + field.getName());
@@ -104,73 +94,17 @@ public class MyHBaseFactory {
 				continue;
 			}
 
-			if (field.isAnnotationPresent(Column.class)) {
-				Column column = field.getAnnotation(Column.class);
-				String name = column.name().contains(":") ? column.name()
-						: column.name() + ":";
-				if (htd.getFamily(name.getBytes()) != null) {
-					log.error(name + " repeat !");
-					throw new RuntimeException(name + " repeat !");
-				}
-				hcd = new HColumnDescriptor(name);
-				hcd.setBloomfilter(column.bloomfilter());
-				hcd.setCompressionType(column.compressionType());
-				hcd.setBlockCacheEnabled(column.blockCacheEnabled());
-				hcd.setMaxVersions(column.maxVersions());
-				if (!htd.isInMemory()) {
-					hcd.setInMemory(column.inMemory());
-				}
-			} else
-				continue;// 字段必选
-
-			if (field.isAnnotationPresent(One2Many.class)) {
-				One2Many o2m = field.getAnnotation(One2Many.class);
-
-				log.debug(o2m);
-			}
-			if (field.isAnnotationPresent(Many2One.class)) {
-				Many2One m2o = field.getAnnotation(Many2One.class);
-				log.debug(m2o);
-
-			}
-			htd.addFamily(hcd);
-		}
-		return htd;
-	}
-
-	@Deprecated
-	public HTableDescriptor annotation2hbase1(Class<?> class1,
-			HTableDescriptor htd) {
-		// 类处理
-		// 表的描述
-		if (class1.isAnnotationPresent(Table.class)) {
-			Table t = class1.getAnnotation(Table.class);
-			htd = new HTableDescriptor(t.name());
-			htd.setInMemory(t.inMemory());
-			htd.setReadOnly(t.readOnly());
-		} else {
-			if (htd == null)// 子类必须是@Table
-				return htd;
-		}
-		// 字段的处理
-		Field[] fields = class1.getDeclaredFields();
-		for (Field field : fields) {
-			log.debug("field:name======" + field.getName());
-			HColumnDescriptor hcd = null;
-
-			// ID暂不处理
-			if (field.isAnnotationPresent(ID.class)) {
-				ID id = field.getAnnotation(ID.class);
-				log.debug(id);
-
-				// ID字段不进行其他的处理
+			if (field.isAnnotationPresent(Transient.class)) {
 				continue;
 			}
 
 			if (field.isAnnotationPresent(Column.class)) {
+				String fieldname = field.getName();
+				String name = fieldname.contains(":") ? fieldname : fieldname
+						+ ":";
+
 				Column column = field.getAnnotation(Column.class);
-				String name = column.name().contains(":") ? column.name()
-						: column.name() + ":";
+
 				if (htd.getFamily(name.getBytes()) != null) {
 					log.error(name + " repeat !");
 					throw new RuntimeException(name + " repeat !");
@@ -183,23 +117,58 @@ public class MyHBaseFactory {
 				if (!htd.isInMemory()) {
 					hcd.setInMemory(column.inMemory());
 				}
-			} else
-				continue;// 字段必选
+				// continue;
+			}
+
+			// 没有注释的使用默认Column的值
+			if (!(field.isAnnotationPresent(ID.class)
+					|| field.isAnnotationPresent(Transient.class)
+					|| field.isAnnotationPresent(Column.class)
+					|| field.isAnnotationPresent(One2Many.class) || field
+					.isAnnotationPresent(Many2One.class))) {
+
+				String fieldname = field.getName();
+				if (!(field.getType().equals(Log.class) || fieldname
+						.equalsIgnoreCase("serialVersionUID"))) {
+					String name = fieldname.contains(":") ? fieldname
+							: fieldname + ":";
+
+					// Column column = field.getAnnotation(Column.class);
+
+					if (htd.getFamily(name.getBytes()) != null) {
+						log.error(name + " repeat !");
+						throw new RuntimeException(name + " repeat !");
+					}
+					hcd = new HColumnDescriptor(name);
+					// hcd.setBloomfilter(true);
+					hcd.setCompressionType(CompressionType.NONE);
+					// hcd.setBlockCacheEnabled(column.blockCacheEnabled());
+					hcd.setMaxVersions(2);
+					// if (!htd.isInMemory()) {
+					// hcd.setInMemory(column.inMemory());
+					// }
+					// continue;
+				}
+
+			}
+
+			// else
+			// continue;// 字段必选
 
 			if (field.isAnnotationPresent(One2Many.class)) {
 				One2Many o2m = field.getAnnotation(One2Many.class);
 
 				log.debug(o2m);
+				// continue;
 			}
 			if (field.isAnnotationPresent(Many2One.class)) {
 				Many2One m2o = field.getAnnotation(Many2One.class);
 				log.debug(m2o);
-
+				// continue;
 			}
-			htd.addFamily(hcd);
-		}
-		if (class1.getSuperclass() != null) {
-			htd = annotation2hbase1(class1.getSuperclass(), htd);
+			if (hcd != null) {
+				htd.addFamily(hcd);
+			}
 		}
 		return htd;
 	}
@@ -233,7 +202,7 @@ public class MyHBaseFactory {
 		list = walk4field(class1, list);
 		for (Field field : list) {
 			Column annotation = field.getAnnotation(Column.class);
-			result.put(annotation.name(), field);
+			result.put(field.getName(), field);
 		}
 		return result;
 	}
@@ -332,56 +301,49 @@ public class MyHBaseFactory {
 		}
 	}
 
-	public void autoObj2HBase(HTableDescriptor line)
+	public void autoObj2HBase(HTableDescriptor lineTableDesc)
 			throws MasterNotRunningException, IOException {
-		byte[] tableName = line.getName();
+		byte[] tableName = lineTableDesc.getName();
 		if (!admin.tableExists(tableName)) {
 			log.debug("create ...");
-			admin.createTableAsync(line);
-		} else {
-			log.debug("update ..." + new String(tableName));
-			if (!admin.isTableEnabled(tableName)) {
-				admin.enableTable(tableName);
-			}
-
-			// HTable htable = getTable(tableName);
-			HTable htable = MyHbaseUtil.getTable(new String(tableName));
-			HTableDescriptor dbTableDescriptor = htable.getTableDescriptor();
-
-			Collection<HColumnDescriptor> families = dbTableDescriptor
-					.getFamilies();
-
-			Map<String, HColumnDescriptor> f1db = new HashMap<String, HColumnDescriptor>();
-			for (HColumnDescriptor columnDescriptor : families) {
-				f1db.put(columnDescriptor.getNameAsString(), columnDescriptor);
-			}
-			Map<String, HColumnDescriptor> f4db = new HashMap<String, HColumnDescriptor>();
-			f4db.putAll(f1db);
-
-			Map<String, HColumnDescriptor> f2obj = new HashMap<String, HColumnDescriptor>();
-			for (HColumnDescriptor columnDescriptor : line.getFamilies()) {
-				f2obj.put(columnDescriptor.getNameAsString(), columnDescriptor);
-			}
-			Map<String, HColumnDescriptor> f3obj = new HashMap<String, HColumnDescriptor>();
-			f3obj.putAll(f2obj);
-
-			if (admin.isTableEnabled(tableName)) {
-				admin.disableTable(tableName);
-			}
-
-			// dbTableDescriptor.setReadOnly(line.isReadOnly());
-			// dbTableDescriptor.setInMemory(line.isInMemory());
-			// admin.modifyTableMeta(arg0, arg1)
-			line.isInMemory();
-			removeColumn(tableName, f4db, f3obj);
-			addColumn(tableName, f2obj, f1db);
-			updateColumn(tableName, dbTableDescriptor, f3obj, f1db);
-
-			if (!admin.isTableEnabled(tableName)) {
-				admin.enableTable(tableName);
-			}
-
+			admin.createTableAsync(lineTableDesc);
 		}
+		// else {
+		log.debug("update ..." + new String(tableName));
+		if (!admin.isTableEnabled(tableName)) {
+			admin.enableTable(tableName);
+		}
+
+		// HTable htable = getTable(tableName);
+		HTable htable = MyHbaseUtil.getTable(new String(tableName));
+		Map<String, HColumnDescriptor> f1db = new HashMap<String, HColumnDescriptor>();
+		for (HColumnDescriptor columnDescriptor : htable.getTableDescriptor()
+				.getFamilies()) {
+			f1db.put(columnDescriptor.getNameAsString(), columnDescriptor);
+		}
+		Map<String, HColumnDescriptor> f4db = new HashMap<String, HColumnDescriptor>();
+		f4db.putAll(f1db);
+
+		Map<String, HColumnDescriptor> f2obj = new HashMap<String, HColumnDescriptor>();
+		for (HColumnDescriptor columnDescriptor : lineTableDesc.getFamilies()) {
+			f2obj.put(columnDescriptor.getNameAsString(), columnDescriptor);
+		}
+		Map<String, HColumnDescriptor> f3obj = new HashMap<String, HColumnDescriptor>();
+		f3obj.putAll(f2obj);
+
+		if (admin.isTableEnabled(tableName)) {
+			admin.disableTable(tableName);
+		}
+
+		removeColumn(tableName, f4db, f3obj);
+		addColumn(tableName, f2obj, f1db);
+		updateColumn(tableName, htable.getTableDescriptor(), f3obj, f1db);
+
+		if (!admin.isTableEnabled(tableName)) {
+			admin.enableTable(tableName);
+		}
+
+		// }
 	}
 
 	/**

@@ -4,20 +4,21 @@ import com.supermy.annotation.Column;
 import com.supermy.annotation.Many2One;
 import com.supermy.annotation.Table;
 
-@Table(name = "forum_test")
+@Table
 public class Forum extends Action {
 
 	// @ID("auto")
 	// public String id;
 
-	@Column(name = "title", bloomfilter = true)
+	@Column( bloomfilter = true)
 	private String title;
-	@Column(name = "content")
+	@Column
 	private String content;
-	@Column(name = "publish_user", bloomfilter = true)
+	
+	@Column(bloomfilter = true)
 	@Many2One
 	private User publishUser;
-	@Column(name = "publish_time")
+	@Column
 	private String publishTime;
 
 	/**

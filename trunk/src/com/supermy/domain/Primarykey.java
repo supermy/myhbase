@@ -7,9 +7,9 @@ import com.supermy.annotation.Table;
  * @author my
  *         HBase主键构造
  */
-@Table(name = "primarykeys", inMemory = true)
+@Table( inMemory = true)
 public class Primarykey {
-	@Column(name = "primarykey", bloomfilter = true)
+	@Column( bloomfilter = true)
 	private String primarykey;
 
 	/**

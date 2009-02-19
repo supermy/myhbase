@@ -9,11 +9,11 @@ import org.apache.commons.logging.LogFactory;
 import com.supermy.annotation.Column;
 import com.supermy.annotation.Table;
 
-@Table(name = "filterword")
+@Table
 public class FilterWord {
 	private static final Log log = LogFactory.getLog(FilterWord.class);
 
-	@Column(name = "keyword", inMemory = true)
+	@Column( inMemory = true)
 	private String keyword;
 
 	/**

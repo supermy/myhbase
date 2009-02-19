@@ -33,6 +33,7 @@ import com.supermy.annotation.ID;
 import com.supermy.annotation.Table;
 import com.supermy.annotation.ID.IdType;
 import com.supermy.annotation.factory.GenKey;
+import com.supermy.annotation.test.TableUtil;
 import com.supermy.domain.Action;
 
 /**
@@ -112,7 +113,8 @@ public class ConvertBean {
 
 	public Action hbaserow2object(Action obj) {
 		log.debug("hbaserow2object(Action obj)");
-		String tableName = obj.getClass().getAnnotation(Table.class).name();
+//		String tableName = obj.getClass().getAnnotation(Table.class).name();
+		String tableName=TableUtil.getTable(obj.getClass());
 		HTable htable = MyHbaseUtil.getTable(tableName);
 		String key = obj.getId();
 		try {
@@ -157,13 +159,15 @@ public class ConvertBean {
 	 * @return
 	 */
 	public BatchUpdate object2hbaswrow(Action obj) {
-		String tableName = obj.getClass().getAnnotation(Table.class).name();
+//		String tableName = obj.getClass().getAnnotation(Table.class).name();
+		String tableName=TableUtil.getTable(obj.getClass());
 		BatchUpdate line;
 		try {
 			HTableDescriptor htd = MyHbaseUtil.getTableDesc(tableName);
 			Collection<HColumnDescriptor> familiesDb = htd.getFamilies();
 			Map<String, Field> fieldsObj = MyHbaseUtil
 					.getFileds(obj.getClass());
+			log.debug(fieldsObj);
 			// 创建 选择主键创建机制
 			String idValue = getId(tableName, fieldsObj, obj);
 			line = new BatchUpdate(idValue);
@@ -185,6 +189,7 @@ public class ConvertBean {
 
 				date2db(line, columnName, propertyValue, field);
 				int2db(line, columnName, propertyValue, field);
+				boolean2db(line, columnName, propertyValue, field);
 				long2db(line, columnName, propertyValue, field);
 				string2db(line, columnName, propertyValue, field);
 
@@ -283,6 +288,8 @@ public class ConvertBean {
 				|| field.getType().isAssignableFrom(int.class)
 				|| field.getType().isAssignableFrom(Integer.class)
 				|| field.getType().isAssignableFrom(Map.class)
+				|| field.getType().isAssignableFrom(boolean.class)
+				|| field.getType().isAssignableFrom(Boolean.class)
 				|| field.getType().isAssignableFrom(long.class)
 				|| field.getType().isAssignableFrom(Long.class) || field
 				.getType().isAssignableFrom(Date.class))) {
@@ -331,6 +338,13 @@ public class ConvertBean {
 						|| value.getClass().isAssignableFrom(Integer.class)) {
 					line.put(key.toString(), Bytes.toBytes((Integer) value));
 					line.put(key.toString() + "_type", Integer.class.getName()
+							.getBytes());
+				}
+				if (value.getClass().isAssignableFrom(boolean.class)
+						|| value.getClass().isAssignableFrom(Boolean.class)) {
+					line.put(key.toString(), new String((Boolean) value ? "1"
+							: "0").getBytes());
+					line.put(key.toString() + "_type", Boolean.class.getName()
 							.getBytes());
 				}
 				if (value.getClass().isAssignableFrom(long.class)
@@ -386,6 +400,16 @@ public class ConvertBean {
 		}
 	}
 
+	private void boolean2db(BatchUpdate line, String columnName, Object value,
+			Field field) throws IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
+		if (field.getType().isAssignableFrom(Boolean.class)
+				|| field.getType().isAssignableFrom(boolean.class)) {
+			line.put(columnName + ":", new String((Boolean) value ? "1" : "0")
+					.getBytes());
+		}
+	}
+
 	private void date2db(BatchUpdate line, String columnName, Object value,
 			Field field) throws IllegalAccessException,
 			InvocationTargetException, NoSuchMethodException {
@@ -411,17 +435,18 @@ public class ConvertBean {
 					obj.getClass()).entrySet()) {
 				// 某个字段
 				Field field = entry.getValue();
-				Column annotation = field.getAnnotation(Column.class);
-				// 没有Column注解的字段不予以处理
-				if (annotation == null)
-					continue;
+				
+//				Column annotation = field.getAnnotation(Column.class);
+//				// 没有Column注解的字段不予以处理
+//				if (annotation == null)
+//					continue;
 
 				// 特殊类型转换
-				map2obj(obj, row, field, annotation.name());
-				other2obj4serializable(obj, row, field, annotation.name());
+				map2obj(obj, row, field, field.getName());
+				other2obj4serializable(obj, row, field, field.getName());
 
-				Cell value = row.get(annotation.name() + ":");
-				log.debug("name:" + annotation.name() + " value:" + value);
+				Cell value = row.get(field.getName() + ":");
+				log.debug("name:" + field.getName() + " value:" + value);
 				// map 和其他类型可能处理不到FIXME
 				if ((value == null || value.getValue() == null)) {
 					continue;
@@ -430,6 +455,7 @@ public class ConvertBean {
 				// 常用类型转换
 				date2obj(obj, field, value);
 				int2obj(obj, field, value);
+				boolean2obj(obj, field, value);
 				long2obj(obj, field, value);
 				string2obj(obj, field, value);
 			}
@@ -479,6 +505,18 @@ public class ConvertBean {
 
 	}
 
+	private void boolean2obj(Object action, Field field, Cell value)
+			throws IllegalAccessException, InvocationTargetException,
+			NoSuchMethodException {
+
+		if (field.getType().isAssignableFrom(Boolean.class)
+				|| field.getType().isAssignableFrom(boolean.class)) {
+			PropertyUtils.setProperty(action, field.getName(), Boolean
+					.parseBoolean(new String(value.getValue())));
+		}
+
+	}
+
 	private void date2obj(Object action, Field field, Cell value)
 			throws IllegalAccessException, InvocationTargetException,
 			NoSuchMethodException {
@@ -500,6 +538,8 @@ public class ConvertBean {
 				|| field.getType().isAssignableFrom(int.class)
 				|| field.getType().isAssignableFrom(Integer.class)
 				|| field.getType().isAssignableFrom(Map.class)
+				|| field.getType().isAssignableFrom(boolean.class)
+				|| field.getType().isAssignableFrom(Boolean.class)
 				|| field.getType().isAssignableFrom(long.class)
 				|| field.getType().isAssignableFrom(Long.class) || field
 				.getType().isAssignableFrom(Date.class))) {
@@ -525,6 +565,11 @@ public class ConvertBean {
 			log.debug("map type name:" + name);
 			Map<String, Object> obj = new HashMap<String, Object>();
 
+			// Cell cell = row.get(name+":");
+			// for (Cell cell2 : cell) {
+			// log.debug(new String(cell2.getValue()));
+			// }
+
 			for (byte[] key1 : row.keySet()) {
 				String key = new String(key1);
 				if (key.startsWith(name) && !key.contains("_type")
@@ -541,6 +586,9 @@ public class ConvertBean {
 					key = key.substring((name + ":").length());
 					if (type.equalsIgnoreCase(Integer.class.getName())) {
 						obj.put(key, Bytes.toInt(value));
+					}
+					if (type.equalsIgnoreCase(Boolean.class.getName())) {
+						obj.put(key, Boolean.parseBoolean(new String(value)));
 					}
 					if (type.equalsIgnoreCase(Long.class.getName())) {
 						obj.put(key, Bytes.toLong(value));

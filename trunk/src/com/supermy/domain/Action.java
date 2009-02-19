@@ -10,7 +10,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.BatchUpdate;
 import org.apache.hadoop.hbase.io.RowResult;
 
-import com.supermy.annotation.Table;
+import com.supermy.annotation.test.TableUtil;
 import com.supermy.utils.ConvertBean;
 import com.supermy.utils.MyHbaseUtil;
 
@@ -19,7 +19,7 @@ import com.supermy.utils.MyHbaseUtil;
  * 
  *         单个对象的生命周期
  */
-public abstract class Action extends Base {
+public  class Action extends Base {
 
 	/**
 	 * 
@@ -27,7 +27,28 @@ public abstract class Action extends Base {
 	private static final long serialVersionUID = 1L;
 	private static final Log log = LogFactory.getLog(Action.class);
 
+	@Deprecated
+	public static class CurrentClassGetter extends SecurityManager {
+		public String getClassName() {
+			log.debug(getClassContext()[1].getName());
+			return getClassContext()[1].getName();
+		}
+	}
+	
+	@Deprecated
+	public static String  getClassName1() {
+		StackTraceElement[] stackTraceElement = new Throwable().getStackTrace();
+		String className = stackTraceElement[stackTraceElement.length - 1]
+				.getClassName();
+		log.debug(className);
+		return className;
+
+	}	
+	
+	@Deprecated
 	public static String getClassName() {
+		//String className = new CurrentClassGetter().getClassName();
+//		String className = test();
 		String className = null;
 		try {
 			throw new Exception();
@@ -35,15 +56,21 @@ public abstract class Action extends Base {
 			StackTraceElement[] element = e.getStackTrace();
 			className = element[0].getClassName();
 		}
+		log.debug(className);
 		return className;
 	}
 
+	@Deprecated
 	public static String getTableName() {
+
 		Class<?> clazz = getThisClass();
-		Table t = clazz.getAnnotation(Table.class);
-		return t.name();
+		String tablename = clazz.getName().replace(".", "_");
+		// Table t = clazz.getAnnotation(Table.class);
+		// return t.name();
+		return tablename;
 	}
 
+	@Deprecated
 	public static Class<? extends Action> getThisClass() {
 		Class<? extends Action> clazz;
 		try {
@@ -52,12 +79,14 @@ public abstract class Action extends Base {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
+		log.debug(clazz);
 		return clazz;
 	}
 
 	public void commit(BatchUpdate line) {
-		HTable htable = MyHbaseUtil.getTable(getClass().getAnnotation(
-				Table.class).name());
+		String tablename =TableUtil.getTable(getClass());
+		//getClass().getName().replace(".", "_");
+		HTable htable = MyHbaseUtil.getTable(tablename);
 		try {
 			htable.commit(line);
 		} catch (IOException e) {
@@ -94,8 +123,8 @@ public abstract class Action extends Base {
 	public void delete() {
 		try {
 			Class<? extends Action> clazz = getClass();
-			HTable htable = MyHbaseUtil.getTable(clazz.getAnnotation(
-					Table.class).name());
+			String tablename =TableUtil.getTable(clazz);
+			HTable htable = MyHbaseUtil.getTable(tablename);
 			String idValue = getId();
 			if (StringUtils.isEmpty(idValue)) {
 				throw new RuntimeException("id don't is null!");
@@ -108,12 +137,13 @@ public abstract class Action extends Base {
 
 	}
 
-	public static void delete(List<Action> list) {
+	public static void delete(List<Action> list) {//FIXME
 		try {
 
 			Class<?> clazz = getThisClass();
-			HTable htable = MyHbaseUtil.getTable(clazz.getAnnotation(
-					Table.class).name());
+			String tablename = TableUtil.getTable(clazz);
+
+			HTable htable = MyHbaseUtil.getTable(tablename);
 
 			for (Action action : list) {
 				String idValue = action.getId();
@@ -131,7 +161,7 @@ public abstract class Action extends Base {
 	}
 
 	public Action get() {
-		log.debug("get start ... ...Class: "+getClass()+" id:" + getId());
+		log.debug("get start ... ...Class: " + getClass() + " id:" + getId());
 		ConvertBean cb = new ConvertBean();
 		Action hbaserow2object = cb.hbaserow2object(this);
 		return hbaserow2object;

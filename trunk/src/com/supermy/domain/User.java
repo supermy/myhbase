@@ -4,29 +4,37 @@ import java.util.Map;
 
 import com.supermy.annotation.Column;
 import com.supermy.annotation.Table;
+import com.supermy.annotation.test.Parent;
 import com.supermy.utils.MD5;
 
-@Table(name = "user_test")
+@Table
 public class User extends Action {
 
+	public static void main(String[] args) {
+		User.getClassName();
+		User.getClassName1();
+		new User.CurrentClassGetter().getClassName();
+	}
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Column(name = "email", bloomfilter = true)
+	@Column(bloomfilter = true)
 	private String email;
-	@Column(name = "password", bloomfilter = true)
+	@Column( bloomfilter = true)
 	private String password;
 
-	@Column(name = "name")
 	private String name;
-	@Column(name = "sex")
 	private String sex;
-	@Column(name = "age")
 	private int age;
-	@Column(name = "contact")
+	private String address;
+	private String zip;
+	@Column
 	private Map<String, Object> contact;
+	@Column
+	private boolean actived = false;
 
 	public User() {
 	}
@@ -34,6 +42,21 @@ public class User extends Action {
 	public User(String email) {
 		this.email = email;
 		setId(MD5.getMD5(email.getBytes()));
+	}
+
+	/**
+	 * @return the actived
+	 */
+	public boolean isActived() {
+		return actived;
+	}
+
+	/**
+	 * @param actived
+	 *            the actived to set
+	 */
+	public void setActived(boolean actived) {
+		this.actived = actived;
 	}
 
 	/**
@@ -126,4 +149,33 @@ public class User extends Action {
 		this.password = password;
 	}
 
+	/**
+	 * @return the address
+	 */
+	public String getAddress() {
+		return address;
+	}
+
+	/**
+	 * @param address the address to set
+	 */
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	/**
+	 * @return the zip
+	 */
+	public String getZip() {
+		return zip;
+	}
+
+	/**
+	 * @param zip the zip to set
+	 */
+	public void setZip(String zip) {
+		this.zip = zip;
+	}
+
+	
 }
