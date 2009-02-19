@@ -1,5 +1,29 @@
+20090219
+	Transient ok
+     增加ant build.xml
+
+	完成一个demo(界面用ext)
+	再完成一个产品。
+	email 反转 直接作为key;
+	
+20090130
+	使用默认名称，不同的包，同一个类名会出现混淆，不便于复用。
+	表明使用类名（含包名，如果名称长度限制，使用hashcode）
+	引入临时Annotation,所有临时字段必须申明；
+		
+		
+20090127
+			BeanInfo beanInfo = Introspector.getBeanInfo(type);
+			PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+20090119
+	支持boolean
+	
+	BeanUtils.populate(bean,   map)
+	
 20090115
 	查询的时候可以使用列或者属性；要进行验证列属性
+	
 
 20090114
 	实例化必须有构造子；
