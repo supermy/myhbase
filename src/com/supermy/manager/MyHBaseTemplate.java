@@ -27,10 +27,9 @@ import org.apache.hadoop.hbase.io.Cell;
 import org.apache.hadoop.hbase.io.RowResult;
 
 import com.supermy.annotation.Table;
+import com.supermy.annotation.test.TableUtil;
 import com.supermy.domain.Action;
-import com.supermy.domain.User;
 import com.supermy.utils.ConvertBean;
-import com.supermy.utils.MD5;
 import com.supermy.utils.MyHBaseException;
 import com.supermy.utils.MyHbaseUtil;
 
@@ -44,11 +43,13 @@ import com.supermy.utils.MyHbaseUtil;
  * 集合的crud;<br>
  * 所有的delete
  */
-public class MyHBaseTemplate {
+public class MyHBaseTemplate<T> {
 	private static final Log log = LogFactory.getLog(MyHBaseTemplate.class);
-
+	private T obj;
+	
 	public MyHBaseTemplate() {
 		super();
+		
 		log.debug("myhbse create !!!");
 	}
 
@@ -571,7 +572,7 @@ public class MyHBaseTemplate {
 	 * @param value
 	 * @throws MyHBaseException
 	 */
-	@Deprecated
+//	@Deprecated
 	// public void add(String key, Object value) throws MyHBaseException {
 	// BatchUpdate line = new BatchUpdate(key);
 	// BaseSerializing bs = new BaseSerializing();
@@ -620,8 +621,8 @@ public class MyHBaseTemplate {
 			throw new MyHBaseException("列和列值的个数不一致!");
 		}
 
-		HTable table = MyHbaseUtil.getTable(clazz.getAnnotation(Table.class)
-				.name());
+		String tableName=TableUtil.getTable(obj.getClass());
+		HTable table = MyHbaseUtil.getTable(tableName);
 
 		// String pageSize="20";
 		// String startRow="";
@@ -732,8 +733,8 @@ public class MyHBaseTemplate {
 
 		columns = checkAndTurnProperty2Column(clazz, columns);
 
-		HTable table = MyHbaseUtil.getTable(clazz.getAnnotation(Table.class)
-				.name());
+		String tableName=TableUtil.getTable(obj.getClass());
+		HTable table = MyHbaseUtil.getTable(tableName);
 
 		try {
 			RowResult row;
@@ -795,68 +796,5 @@ public class MyHBaseTemplate {
 		return columns;
 	}
 
-	/**
-	 * 按用户名称查询用户
-	 * 
-	 * @param value
-	 * @return
-	 * @throws MyHBaseException
-	 */
-	public User findUserByName(String value) throws MyHBaseException {
-		String column = "name";
-		List<Action> find = find(User.class, new String[] { column },
-				new String[] { value }, "", 1);
-
-		log.debug(find);
-		// Assert.assertTrue(find.size()>0);
-
-		if (find.size() <= 0) {
-			return null;
-		} else {
-			return (User) find.get(0);
-		}
-	}
-
-	public User getUserByEmail(String email) throws MyHBaseException {
-		return (User) get(User.class, MD5.getMD5(email.getBytes()));
-	}
-
-	public void register(User user) throws MyHBaseException {
-		// email要唯一
-		User userByEmail = getUserByEmail(user.getEmail());
-		if (userByEmail != null) {
-			throw new MyHBaseException("用户已经存在");
-		}
-		user.saveOrUpdate();
-		log.debug(user.get());
-	}
-
-	public boolean login(User newuser) throws MyHBaseException {
-		User userByEmail = getUserByEmail(newuser.getEmail());
-		if (userByEmail == null) {
-			throw new MyHBaseException("用户名不存在！");
-		}
-		if (!userByEmail.getPassword().equalsIgnoreCase(newuser.getPassword())) {
-			throw new MyHBaseException("用户名或者口令不正确！");
-		}
-		log.debug("成功登录");
-		return true;
-	}
-
-	public void changePwd(User newuser, String newpassword)
-			throws MyHBaseException {
-		if (StringUtils.isBlank(newuser.getId())) {
-			throw new MyHBaseException("id不能为空......");
-		}
-		if (StringUtils.isBlank(newpassword)) {
-			throw new MyHBaseException("新口令不能为空......");
-		}
-		if (!login(newuser)) {
-			throw new MyHBaseException("非法用户......");
-		}
-		// 更改口令
-		newuser.setPassword(newpassword);
-		newuser.saveOrUpdate();
-	}
 
 }

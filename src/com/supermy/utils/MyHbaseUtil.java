@@ -19,6 +19,10 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 
 import com.supermy.annotation.Column;
+import com.supermy.annotation.ID;
+import com.supermy.annotation.Many2One;
+import com.supermy.annotation.One2Many;
+import com.supermy.annotation.Transient;
 
 /**
  * @author my 本地数据缓存
@@ -146,17 +150,54 @@ public class MyHbaseUtil {
 		List<Field> list = new ArrayList<Field>();
 		list = walk4field(class1, list);
 		for (Field field : list) {
-			if (field.getName().equalsIgnoreCase("id")) {
+
+			if (field.isAnnotationPresent(ID.class)) {
 				result.put("id", field);
-			} else {
-				// TODO One2Many Many2One
-				Column annotation = field.getAnnotation(Column.class);
-				log.debug(annotation);
-				log.debug(field);
-				if (annotation != null)
-					result.put(annotation.name(), field);
 			}
-		}
+
+			if (field.isAnnotationPresent(Transient.class)) {
+				continue;
+			}
+
+			if (field.isAnnotationPresent(Column.class)) {
+				result.put(field.getName(), field);
+			}
+
+			if (field.isAnnotationPresent(One2Many.class)) {
+				One2Many o2m = field.getAnnotation(One2Many.class);
+				log.debug(o2m);
+			}
+
+			if (field.isAnnotationPresent(Many2One.class)) {
+				Many2One m2o = field.getAnnotation(Many2One.class);
+				log.debug(m2o);
+			}
+
+			// 没有注释的使用默认Column的值
+			if (!(field.isAnnotationPresent(ID.class)
+					|| field.isAnnotationPresent(Transient.class)
+					|| field.isAnnotationPresent(Column.class)
+					|| field.isAnnotationPresent(One2Many.class) 
+					|| field.isAnnotationPresent(Many2One.class))) {
+
+				String fieldname = field.getName();
+				if (!(field.getType().equals(Log.class) || fieldname
+						.equalsIgnoreCase("serialVersionUID"))) {
+					result.put(field.getName(), field);
+				}
+
+			}
+
+
+			/*
+			 * else { // TODO One2Many Many2One
+			 * 
+			 * Column annotation = field.getAnnotation(Column.class);
+			 * log.debug(annotation); log.debug(field); if (annotation != null)
+			 * result.put(field.getName(), field);
+			 * 
+			 * }
+			 */}
 		return result;
 	}
 
@@ -169,7 +210,7 @@ public class MyHbaseUtil {
 			log.debug(annotation);
 			log.debug(field);
 			if (annotation != null)
-				result.put(field.getName(), annotation.name());
+				result.put(field.getName(), field.getName());
 		}
 		return result;
 	}

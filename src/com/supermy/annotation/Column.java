@@ -22,7 +22,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor.CompressionType;
 @Documented
 @Inherited
 public @interface Column {
-	String name();
+	//String name();
 	boolean bloomfilter() default false;
 	boolean inMemory() default false;
 	CompressionType compressionType() default CompressionType.NONE;

@@ -14,7 +14,7 @@ public abstract class Base implements Serializable{
 	@ID
 	private String id;
 	
-	@Column(name="createtime")
+	@Column
 	private Date createTime=new Date();;
 
 	

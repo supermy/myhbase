@@ -1,8 +1,6 @@
-/**
- * 
- */
 package com.supermy.manager.test;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,9 +13,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.inject.Guice;
 import com.supermy.domain.Action;
 import com.supermy.domain.User;
-import com.supermy.manager.MyHBaseTemplate;
+import com.supermy.manager.UserManager;
 import com.supermy.utils.MD5;
 import com.supermy.utils.MyHBaseException;
 
@@ -27,28 +26,36 @@ import com.supermy.utils.MyHBaseException;
  */
 public class MyHBaseTemplateTest {
 	private static final Log log = LogFactory.getLog(MyHBaseTemplateTest.class);
-	MyHBaseTemplate template;
-	User newu;
+
+	UserManager template = new UserManager();
+
+	// User newu;
 
 	@Test
-	public void userRegister() throws MyHBaseException {
+	public void userRegisterLogin() throws MyHBaseException {
 		User newuser = new User();
 		newuser.setEmail("springclick@gmail.com");
 		newuser.setPassword(MD5.getMD5("111111".getBytes()));
 		newuser.setId(MD5.getMD5("springclick@gmail.com".getBytes()));
 
+		Map<String, Object> contact = new HashMap<String, Object>();
+		contact.put("contact", "中关村");
+		contact.put("name", "tiger");
+		contact.put("qq", "123456");
+		contact.put("msn", "msn@msn.com");
+		contact.put("test1", 12);
+		contact.put("test2", Long.parseLong("123456"));
+		Date value = new Date();
+		contact.put("test3", value);
+
+		newuser.setContact(contact);
+
+		newuser.delete();
 		template.register(newuser);
-
-	}
-
-	@Test
-	public void userLogin() throws MyHBaseException {
-		User newuser = new User();
-		newuser.setEmail("springclick@gmail.com");
-		newuser.setPassword(MD5.getMD5("111111".getBytes()));
 		Assert.assertTrue(template.login(newuser));
 	}
 
+	
 	@Test
 	public void changePwd() throws MyHBaseException {
 		User newuser = new User("springclick@gmail.com");
@@ -72,7 +79,6 @@ public class MyHBaseTemplateTest {
 		User newuser = new User("springclick@gmail.com");
 		newuser.setAge(99);
 		newuser.setName("yy");
-		// 恢复原有口令，便于测试
 		newuser.saveOrUpdate();
 		User u = (User) newuser.get();
 		Assert.assertEquals(u.getAge(), newuser.getAge());
@@ -82,10 +88,16 @@ public class MyHBaseTemplateTest {
 	@Test
 	public void findUserByName() throws MyHBaseException {
 		log.debug("find user by name ... ...");
+		User newuser = new User("springclick@gmail.com");
+		newuser.setAge(99);
+		newuser.setName("tiger");
+		newuser.saveOrUpdate();
+
 		String name = "tiger";
-		// 返回一个对象
-		User user = template.findUserByName(name);
-		log.debug(user);
+		User u = template.findUserByName(name);
+
+		Assert.assertEquals(u.getAge(), newuser.getAge());
+		Assert.assertEquals(u.getName(), newuser.getName());
 
 	}
 
@@ -120,7 +132,7 @@ public class MyHBaseTemplateTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		template = new MyHBaseTemplate();
+		// template = new MyHBaseTemplate();
 		//
 		// newu = new User("tiger");
 		// //newu.setId("xyz");
