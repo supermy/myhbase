@@ -2,6 +2,8 @@ package com.supermy.domain;
 
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.supermy.annotation.Column;
 import com.supermy.annotation.Table;
 import com.supermy.annotation.test.Parent;
@@ -15,7 +17,7 @@ public class User extends Action {
 		User.getClassName1();
 		new User.CurrentClassGetter().getClassName();
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -23,7 +25,7 @@ public class User extends Action {
 
 	@Column(bloomfilter = true)
 	private String email;
-	@Column( bloomfilter = true)
+	@Column(bloomfilter = true)
 	private String password;
 
 	private String name;
@@ -37,11 +39,16 @@ public class User extends Action {
 	private boolean actived = false;
 
 	public User() {
+		
 	}
 
+	/**
+	 * email  reverse 便于hbadoop存储和检索
+	 * @param email
+	 */
 	public User(String email) {
 		this.email = email;
-		setId(MD5.getMD5(email.getBytes()));
+		setId(MD5.getMD5(StringUtils.reverse(email).getBytes()));
 	}
 
 	/**
@@ -157,7 +164,8 @@ public class User extends Action {
 	}
 
 	/**
-	 * @param address the address to set
+	 * @param address
+	 *            the address to set
 	 */
 	public void setAddress(String address) {
 		this.address = address;
@@ -171,11 +179,11 @@ public class User extends Action {
 	}
 
 	/**
-	 * @param zip the zip to set
+	 * @param zip
+	 *            the zip to set
 	 */
 	public void setZip(String zip) {
 		this.zip = zip;
 	}
 
-	
 }
