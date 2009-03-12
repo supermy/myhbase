@@ -181,8 +181,10 @@ public class ConvertBean {
 				map2db(obj, line, columnName, field);
 				other2db4serializable(this, line, columnName, field);
 
-				Object propertyValue = PropertyUtils.getProperty(obj, field
-						.getName());
+//				Object propertyValue = PropertyUtils.getProperty(obj, field
+//						.getName());
+				field.setAccessible(true);
+				Object propertyValue = field.get(obj);
 				if (propertyValue == null) {
 					continue;
 				}
@@ -323,6 +325,7 @@ public class ConvertBean {
 			// 类型转换
 			Map<String, Object> propertyValue = (Map<String, Object>) PropertyUtils
 					.getProperty(obj, field.getName());
+			
 			log.debug("map:" + propertyValue);
 			if (propertyValue == null || propertyValue.size() <= 0) {
 				return;

@@ -6,8 +6,6 @@ import org.apache.commons.lang.StringUtils;
 
 import com.supermy.annotation.Column;
 import com.supermy.annotation.Table;
-import com.supermy.annotation.test.Parent;
-import com.supermy.utils.MD5;
 
 @Table
 public class User extends Action {
@@ -25,6 +23,7 @@ public class User extends Action {
 
 	@Column(bloomfilter = true)
 	private String email;
+	
 	@Column(bloomfilter = true)
 	private String password;
 
@@ -43,12 +42,14 @@ public class User extends Action {
 	}
 
 	/**
-	 * email  reverse 便于hbadoop存储和检索
+	 * ID 是 reverse  email 便于hbadoop存储和检索
 	 * @param email
 	 */
 	public User(String email) {
 		this.email = email;
-		setId(MD5.getMD5(StringUtils.reverse(email).getBytes()));
+		setId(StringUtils.reverse(email));
+		setEmail(email);
+		//setId(MD5.getMD5(StringUtils.reverse(email).getBytes()));
 	}
 
 	/**
@@ -134,10 +135,12 @@ public class User extends Action {
 	}
 
 	/**
+	 * 与id相关不允许修改
 	 * @param email
 	 *            the email to set
 	 */
-	public void setEmail(String email) {
+	@Deprecated
+	public  void setEmail(String email) {
 		this.email = email;
 	}
 

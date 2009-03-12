@@ -39,13 +39,13 @@ public class UserManager {
 		}
 	}
 
-	public User getUserByEmail(String email) throws MyHBaseException {
-		return (User) userUtil.get(User.class, MD5.getMD5(email.getBytes()));
+	public User getUserByEmail(String id) throws MyHBaseException {
+		return (User) userUtil.get(User.class, id);
 	}
 
 	public void register(User user) throws MyHBaseException {
 		// email要唯一
-		User userByEmail = getUserByEmail(user.getEmail());
+		User userByEmail = getUserByEmail(user.getId());
 		if (userByEmail != null) {
 			throw new MyHBaseException("用户已经存在");
 		}
@@ -54,7 +54,7 @@ public class UserManager {
 	}
 
 	public boolean login(User newuser) throws MyHBaseException {
-		User userByEmail = getUserByEmail(newuser.getEmail());
+		User userByEmail = getUserByEmail(newuser.getId());
 		if (userByEmail == null) {
 			throw new MyHBaseException("用户名不存在！");
 		}

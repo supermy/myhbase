@@ -10,17 +10,16 @@ import com.supermy.utils.MyHBaseException;
 import com.supermy.utils.MyHbaseUtil;
 
 public class GenKey {
-	private HTable primaryKey=MyHbaseUtil.getTable("primaryKeys");
+	private HTable primaryKey = MyHbaseUtil.getTable("primaryKeys");
 
-//	public GenKey(HTable primaryKey) {
-//		super();
-//		this.primaryKey = primaryKey;
-//	}
+	// public GenKey(HTable primaryKey) {
+	// super();
+	// this.primaryKey = primaryKey;
+	// }
 
 	/**
 	 * 构造自动增长主键
 	 * 
-	 * @param primaryKey
 	 * @param tableName
 	 * @return
 	 * @throws MyHBaseException
@@ -43,7 +42,7 @@ public class GenKey {
 			primaryKey.commit(key);
 		} catch (IOException e) {
 			e.printStackTrace();
-			//throw new MyHBaseException(e.getLocalizedMessage());
+			// throw new MyHBaseException(e.getLocalizedMessage());
 			throw new RuntimeException(e);
 		}
 		return value;
