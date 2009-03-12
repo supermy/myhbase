@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.inject.Guice;
 import com.supermy.domain.Action;
 import com.supermy.domain.User;
 import com.supermy.manager.UserManager;
@@ -24,8 +23,8 @@ import com.supermy.utils.MyHBaseException;
  * @author my
  * 
  */
-public class MyHBaseTemplateTest {
-	private static final Log log = LogFactory.getLog(MyHBaseTemplateTest.class);
+public class UserManagerTest {
+	private static final Log log = LogFactory.getLog(UserManagerTest.class);
 
 	UserManager template = new UserManager();
 
@@ -33,10 +32,8 @@ public class MyHBaseTemplateTest {
 
 	@Test
 	public void userRegisterLogin() throws MyHBaseException {
-		User newuser = new User();
-		newuser.setEmail("springclick@gmail.com");
+		User newuser = new User("springclick@gmail.com");
 		newuser.setPassword(MD5.getMD5("111111".getBytes()));
-		newuser.setId(MD5.getMD5("springclick@gmail.com".getBytes()));
 
 		Map<String, Object> contact = new HashMap<String, Object>();
 		contact.put("contact", "中关村");
@@ -62,8 +59,8 @@ public class MyHBaseTemplateTest {
 		String oldpassword = MD5.getMD5("111111".getBytes());
 		String newpassword = MD5.getMD5("123456".getBytes());
 
-		String id = MD5.getMD5("springclick@gmail.com".getBytes());
-		newuser.setId(id);
+//		String id = MD5.getMD5("springclick@gmail.com".getBytes());
+//		newuser.setId(id);
 		newuser.setPassword(oldpassword);
 		// 恢复原有口令，便于测试
 		newuser.saveOrUpdate();

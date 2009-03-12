@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import junit.framework.Assert;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +47,7 @@ import com.supermy.utils.MyHbaseUtil;
  */
 public class MyHBaseTemplate<T> {
 	private static final Log log = LogFactory.getLog(MyHBaseTemplate.class);
-	private T obj;
+	//private T obj;
 	
 	public MyHBaseTemplate() {
 		super();
@@ -89,7 +91,9 @@ public class MyHBaseTemplate<T> {
 	}
 
 	public void get(List<Action> obj) {
-		// Action.get(obj);
+		for (Action action : obj) {
+			action=action.get();
+		}
 
 	}
 
@@ -621,7 +625,7 @@ public class MyHBaseTemplate<T> {
 			throw new MyHBaseException("列和列值的个数不一致!");
 		}
 
-		String tableName=TableUtil.getTable(obj.getClass());
+		String tableName=TableUtil.getTable(clazz);
 		HTable table = MyHbaseUtil.getTable(tableName);
 
 		// String pageSize="20";
@@ -732,8 +736,8 @@ public class MyHBaseTemplate<T> {
 			String... columns) throws MyHBaseException {
 
 		columns = checkAndTurnProperty2Column(clazz, columns);
-
-		String tableName=TableUtil.getTable(obj.getClass());
+//		Assert.assertNotNull(obj);
+		String tableName=TableUtil.getTable(clazz);
 		HTable table = MyHbaseUtil.getTable(tableName);
 
 		try {

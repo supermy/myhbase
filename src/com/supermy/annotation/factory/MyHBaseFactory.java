@@ -60,9 +60,7 @@ public class MyHBaseFactory {
 
 	/**
 	 * 生成hbase数据结构文件
-	 * 
 	 * @param type
-	 * @param htd
 	 * @return
 	 */
 	public HTableDescriptor annotation2hbase(Class<?> type) {
@@ -397,6 +395,12 @@ public class MyHBaseFactory {
 		}
 	}
 
+	/**
+	 * @param tableName
+	 * @param db
+	 * @param obj
+	 * @throws IOException
+	 */
 	private void removeColumn(byte[] tableName,
 			Map<String, HColumnDescriptor> db,
 			Map<String, HColumnDescriptor> obj) throws IOException {

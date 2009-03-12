@@ -82,8 +82,8 @@ public class ActionTest {
 		log.debug(uu);
 		// delete
 		uu.delete();
-		User u3 = new User();
-		u3.setId("xyz");
+		User u3 = new User("xyz");
+//		u3.setId();
 		Object object = u3.get();
 		log.debug(u3);
 		Assert.assertNull(object);
@@ -92,21 +92,21 @@ public class ActionTest {
 	@Test
 	public void PropertyUtils() throws IllegalAccessException,
 			InvocationTargetException, NoSuchMethodException {
-		User u = new User();
-		u.setId("xyz");
+		User u = new User("xyz");
+//		u.setId();
 		Map<String, String> describe = PropertyUtils.describe(u);
 		log.debug(describe);
-		Assert.assertEquals(describe.get("id"), "xyz");
+		Assert.assertEquals(describe.get("id"), "zyx");
 	}
 
 	@Test
 	public void BeanUtils() throws IllegalAccessException,
 			InvocationTargetException, NoSuchMethodException {
 		User u = new User("tiger");
-		u.setId("xyz");
+//		u.setId("xyz");
 		Map<String, String> describe = BeanUtils.describe(u);
 		log.debug(describe);
-		Assert.assertEquals(describe.get("id"), "xyz");
+		Assert.assertEquals(describe.get("id"), "regit");
 	}
 
 	/**
