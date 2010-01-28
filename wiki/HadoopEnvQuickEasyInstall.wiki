@@ -7,11 +7,11 @@ cludera 是一个快速部署的hadoop的集成系统，简化了hadoop的部署
 
 
 = Details =
-介绍
-http://archive.cloudera.com/docs/index.html
-单机安装
+介绍.
+http://archive.cloudera.com/docs/index.html.
+单机安装.
 http://archive.cloudera.com/docs/_installing_hadoop_standalone_mode_2.html
-伪分布式安装
+伪分布式安装.
 http://archive.cloudera.com/docs/_installing_hadoop_pseudo_distributed_mode.html
 完全分布式安装
 http://archive.cloudera.com/docs/_installing_hadoop_fully_distributed.html
