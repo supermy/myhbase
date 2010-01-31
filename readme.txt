@@ -1,10 +1,24 @@
+20100131
+	hbase rest+guice  =  cloudfaseweb
+	study hbase rest;
+	study guice2.0
+	study design mvc4hbaseandguice
+	
+20090312
+	测试驱动，完成测试的过程中完善 myhbasetemplate
+	
+
+20090224
+	
+	完成一个demo(界面用ext)
+	再完成一个产品。
+	
+	TODO lucene and hbase
+	
 20090219
 	Transient ok
      增加ant build.xml
-
-	完成一个demo(界面用ext)
-	再完成一个产品。
-	email 反转 直接作为key;
+ 	email 反转 直接作为key;
 	
 20090130
 	使用默认名称，不同的包，同一个类名会出现混淆，不便于复用。
