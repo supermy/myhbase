@@ -4,6 +4,8 @@
 	study guice2.0
 	study design mvc4hbaseandguice
 	
+	freemarker gen html ,must do web test.
+	
 20090312
 	测试驱动，完成测试的过程中完善 myhbasetemplate
 	
