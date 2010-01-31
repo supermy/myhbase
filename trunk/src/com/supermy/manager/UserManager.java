@@ -8,7 +8,6 @@ import org.apache.commons.logging.LogFactory;
 
 import com.supermy.domain.Action;
 import com.supermy.domain.User;
-import com.supermy.utils.MD5;
 import com.supermy.utils.MyHBaseException;
 
 public class UserManager {
